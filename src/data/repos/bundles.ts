@@ -1,7 +1,7 @@
 import { db } from '../db'
 import { alive } from '../rows'
 import type { Track } from '@/lib/enums'
-import type { DailyLogRow, DeliverableRow, DsaProblemRow, EventOccurrenceRow, EventRow, LogBlockRow, PlannerDayRow, PlannerTaskRow, TimetableSlotRow, WeeklyReviewRow, WeeklyTargetRow } from '../types'
+import type { ContentPackRow, DailyLogRow, DailyQuoteRow, DeliverableRow, PackProgressRow, DsaProblemRow, EventOccurrenceRow, EventRow, LogBlockRow, PlannerDayRow, PlannerTaskRow, TimetableSlotRow, WeeklyReviewRow, WeeklyTargetRow } from '../types'
 
 /**
  * Screen-shaped bundles: ONE Dexie transaction and a fixed number of indexed queries per screen —
@@ -146,5 +146,20 @@ export async function getProgressBundle(): Promise<ProgressBundle> {
     problems: alive(await db.dsaProblems.toArray()),
     logs: alive(await db.dailyLogs.toArray()),
     blocks: alive(await db.logBlocks.toArray()),
+  }))
+}
+
+export interface LearnBundle {
+  weeks: WeeklyTargetRow[]
+  quotes: DailyQuoteRow[]
+  packs: ContentPackRow[]
+  progress: PackProgressRow[]
+}
+export async function getLearnBundle(): Promise<LearnBundle> {
+  return db.transaction('r', [db.weeklyTargets, db.dailyQuotes, db.contentPacks, db.packProgress], async () => ({
+    weeks: alive(await db.weeklyTargets.orderBy('weekNumber').toArray()),
+    quotes: alive(await db.dailyQuotes.toArray()),
+    packs: alive(await db.contentPacks.toArray()),
+    progress: alive(await db.packProgress.toArray()),
   }))
 }

@@ -35,7 +35,8 @@ export function AppShell() {
   return (
     <>
       <Outlet />
-      <BottomNav items={NAV} actions={actions} activeIndex={navIndexFor(pathname)} />
+      {/* The reader and chat are immersive: no floating nav over their controls. */}
+      {/^\/learn\/(pack|chat)/.test(pathname) ? null : <BottomNav items={NAV} actions={actions} activeIndex={navIndexFor(pathname)} />}
       <LogSheet />
       <GlobalSheets />
     </>

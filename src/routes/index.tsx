@@ -11,6 +11,8 @@ const lazyRoute = (load: () => Promise<{ default: React.ComponentType }>): Pick<
 export const ROUTE_MODULES: Record<string, () => Promise<{ default: React.ComponentType }>> = {
   '/': () => import('./today'),
   '/more': () => import('./more'),
+  '/learn': () => import('./learn'),
+  '/learn/pack/:id': () => import('./learn-pack'),
   '/planner': () => import('./planner'),
   '/calendar': () => import('./calendar'),
   '/plan': () => import('./plan'),
