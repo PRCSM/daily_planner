@@ -1,7 +1,7 @@
 import { db } from '../db'
 import { alive } from '../rows'
 import type { Track } from '@/lib/enums'
-import type { DailyLogRow, DeliverableRow, DsaProblemRow, EventOccurrenceRow, EventRow, LogBlockRow, WeeklyTargetRow } from '../types'
+import type { DailyLogRow, DeliverableRow, DsaProblemRow, EventOccurrenceRow, EventRow, LogBlockRow, WeeklyReviewRow, WeeklyTargetRow } from '../types'
 
 /**
  * Screen-shaped bundles: ONE Dexie transaction and a fixed number of indexed queries per screen —
@@ -90,4 +90,21 @@ export async function getLogSheetBundle(date: string): Promise<LogSheetBundle> {
     const prevRows = alive(await db.dailyLogs.where('date').below(date).reverse().limit(14).toArray())
     return { weeks, log, blocks, problems, recentTracks, recentTopics, prevFuel: prevRows.find((l) => l.fuelEntered), lastBlock: recent[0] }
   })
+}
+
+export interface PlanBundle {
+  weeks: WeeklyTargetRow[]
+  problems: DsaProblemRow[]
+  logs: DailyLogRow[]
+  reviews: WeeklyReviewRow[]
+  deliverables: DeliverableRow[]
+}
+export async function getPlanBundle(): Promise<PlanBundle> {
+  return db.transaction('r', [db.weeklyTargets, db.dsaProblems, db.dailyLogs, db.weeklyReviews, db.deliverables], async () => ({
+    weeks: alive(await db.weeklyTargets.orderBy('weekNumber').toArray()),
+    problems: alive(await db.dsaProblems.toArray()),
+    logs: alive(await db.dailyLogs.toArray()),
+    reviews: alive(await db.weeklyReviews.orderBy('weekNumber').toArray()),
+    deliverables: alive(await db.deliverables.toArray()),
+  }))
 }
