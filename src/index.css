@@ -1,1 +1,211 @@
 @import 'tailwindcss';
+
+/* Latin subsets only — fully self-hosted so the shell works offline. */
+@font-face {
+  font-family: 'Inter Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2') format('woff2-variations');
+}
+@font-face {
+  font-family: 'Source Serif 4 Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 900;
+  src: url('../node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-wght-normal.woff2') format('woff2-variations');
+}
+@font-face {
+  font-family: 'Source Serif 4 Variable';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 200 900;
+  src: url('../node_modules/@fontsource-variable/source-serif-4/files/source-serif-4-latin-wght-italic.woff2') format('woff2-variations');
+}
+
+/* ── Design tokens ─────────────────────────────────────────────
+   Warm-neutral, near-monochrome. Cards are DARKER than the page in light
+   mode (surface < bg) — that is the whole feel. Colour only carries data. */
+:root,
+:root[data-theme='light'] {
+  color-scheme: light;
+  --bg: #faf9f6;
+  --surface: #f0eee9;
+  --raised: #ffffff;
+  --hairline: #e4e2dc;
+  --ink: #0d0d0c;
+  --ink-2: #6b6b66;
+  --ink-3: #9a9a93;
+  --danger: #c2381a;
+  --success: #0f7b57;
+  --warning: #9a6700;
+  --accent: #ff6b4a;
+  --on-accent: #0d0d0c;
+  --scrim: rgb(13 13 12 / 0.4);
+  --float: 0 8px 24px rgb(13 13 12 / 0.14), 0 1px 3px rgb(13 13 12 / 0.1);
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #1c1c1a;
+  --surface: #2a2a27;
+  --raised: #35342f;
+  --hairline: #3a3934;
+  --ink: #f5f4f0;
+  --ink-2: #a3a29b;
+  --ink-3: #6e6d67;
+  --danger: #ff7a5c;
+  --success: #4ade9b;
+  --warning: #e0b341;
+  --accent: #ff6b4a;
+  --on-accent: #0d0d0c;
+  --scrim: rgb(0 0 0 / 0.55);
+  --float: 0 10px 28px rgb(0 0 0 / 0.5), 0 1px 3px rgb(0 0 0 / 0.4);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-hairline: var(--hairline);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-accent: var(--accent);
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Source Serif 4 Variable', 'Iowan Old Style', Georgia, serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --radius-card: 14px;
+  --spacing: 4px;
+}
+
+/* ── Motion tokens: { duration, dampingRatio } → easing, injected from ui/motion.ts ── */
+:root {
+  --ease-slide: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-slide: 280ms;
+  --ease-sheet: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-sheet: 350ms;
+  --ease-check: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-check: 260ms;
+  --ease-press: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-press: 140ms;
+}
+
+/* ── Type scale ── */
+@utility t-display {
+  font-size: 32px;
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+@utility t-title {
+  font-size: 22px;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+@utility t-heading {
+  font-size: 20px;
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+@utility t-body {
+  font-size: 15px;
+  line-height: 1.4;
+  font-weight: 400;
+}
+@utility t-body-strong {
+  font-size: 15px;
+  line-height: 1.4;
+  font-weight: 700;
+}
+@utility t-label {
+  font-size: 13px;
+  line-height: 1.3;
+  font-weight: 500;
+}
+@utility t-meta {
+  font-size: 11px;
+  line-height: 1.3;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+@utility t-reader {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  line-height: 1.6;
+  font-weight: 400;
+}
+
+@utility press {
+  transition: transform var(--dur-press) var(--ease-press), background-color var(--dur-press) var(--ease-press), opacity var(--dur-press) var(--ease-press);
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+@layer base {
+html,
+body,
+#root {
+  height: 100%;
+}
+html {
+  background: var(--bg);
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+  font-feature-settings: 'cv11', 'ss03';
+}
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  padding: 0;
+  touch-action: manipulation;
+}
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+  touch-action: manipulation;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+::placeholder {
+  color: var(--ink-3);
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+  }
+}
