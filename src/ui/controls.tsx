@@ -165,3 +165,13 @@ export function Field({ label, children, className }: { label: string; children:
     </label>
   )
 }
+
+/** A labelled group of controls (chips etc.). NOT a <label>: a label would become the accessible name of its first button. */
+export function FieldGroup({ label, children, className }: { label: string; children: ReactNode; className?: string }) {
+  return (
+    <div role="group" aria-label={label} className={cn('block', className)}>
+      <span className="t-label mb-1.5 block px-1 text-ink-2" aria-hidden>{label}</span>
+      {children}
+    </div>
+  )
+}

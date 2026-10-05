@@ -1,4 +1,10 @@
-/** Sheets reachable from the FAB on any screen. Filled in as each feature lands. */
+import { EventSheet } from '@/features/calendar/EventSheet'
+
+/** Sheets reachable from the FAB on any screen — pre-mounted so they open instantly. */
 export function GlobalSheets() {
-  return null
+  return (
+    <>
+      <EventSheet />
+    </>
+  )
 }
