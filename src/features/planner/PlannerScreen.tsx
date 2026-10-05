@@ -159,7 +159,7 @@ export function PlannerScreen() {
           {/* The plan's own blocks: context only, not draggable */}
           {plan.map((o) => (
             <div key={o.key} className="pointer-events-none absolute inset-x-1 rounded-[8px] border border-dashed border-hairline" style={geometry(o.startTime!, o.endTime!)} aria-hidden>
-              <span className="t-meta px-2 text-ink-3">{o.title}</span>
+              <span className="t-meta px-2 text-ink-2">{o.title}</span>
             </div>
           ))}
 

@@ -26,6 +26,7 @@ export function Sheet({
   testId?: string
 }) {
   const panel = useRef<HTMLDivElement>(null)
+  const returnTo = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     if (!open) return
@@ -43,6 +44,33 @@ export function Sheet({
     if (open) el.removeAttribute('inert')
     else el.setAttribute('inert', '')
   }, [open])
+
+  // Focus: move into the dialog when it opens (declared AFTER the inert effect: an inert panel can't take focus) (the panel itself — no keyboard is summoned), return to the opener on close,
+  // and keep Tab inside while it's open.
+  useEffect(() => {
+    if (open) {
+      returnTo.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+      panel.current?.focus({ preventScroll: true })
+    } else if (returnTo.current) {
+      returnTo.current.focus?.({ preventScroll: true })
+      returnTo.current = null
+    }
+  }, [open])
+  const trapTab = (e: React.KeyboardEvent) => {
+    if (e.key !== 'Tab' || !panel.current) return
+    const f = [...panel.current.querySelectorAll<HTMLElement>('a[href],button:not([disabled]),input:not([disabled]),select,textarea,[tabindex]:not([tabindex="-1"])')].filter((el) => el.offsetParent !== null || el === document.activeElement)
+    if (f.length === 0) return
+    const first = f[0]!
+    const last = f[f.length - 1]!
+    if (e.shiftKey && (document.activeElement === first || document.activeElement === panel.current)) {
+      e.preventDefault()
+      last.focus()
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault()
+      first.focus()
+    }
+  }
+
 
   // Drag the grabber down to dismiss.
   const drag = useRef<{ y: number; dy: number } | null>(null)
@@ -74,11 +102,13 @@ export function Sheet({
       />
       <div
         ref={panel}
+        tabIndex={-1}
+        onKeyDown={trapTab}
         role="dialog"
         aria-modal="true"
         aria-label={typeof title === 'string' ? title : 'Sheet'}
         className={cn(
-          'absolute inset-x-0 bottom-0 mx-auto flex w-full max-w-[520px] flex-col rounded-t-[22px] bg-bg',
+          'absolute inset-x-0 bottom-0 mx-auto flex w-full max-w-[520px] flex-col rounded-t-[22px] bg-bg outline-none',
           tall ? 'h-[92dvh]' : 'max-h-[92dvh]',
         )}
         style={{

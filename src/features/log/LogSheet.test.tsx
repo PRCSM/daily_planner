@@ -155,3 +155,13 @@ describe('Log sheet — the 30-second flow', () => {
     expect(await db.logBlocks.count()).toBe(0)
   })
 })
+
+describe('Log sheet — concepts learned', () => {
+  it('saves comma-separated concepts as a list on the day’s log', async () => {
+    const u = userEvent.setup()
+    await openSheet()
+    await u.type(screen.getByLabelText('Concepts learned'), 'path compression, union by rank ,  ')
+    await u.tab()
+    await waitFor(async () => expect((await db.dailyLogs.toArray())[0]!.conceptsLearned).toEqual(['path compression', 'union by rank']))
+  })
+})

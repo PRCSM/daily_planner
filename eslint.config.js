@@ -31,7 +31,7 @@ const domainPurity = {
 const NETWORK_SDK = ['@supabase/supabase-js', '@supabase/*']
 
 export default tseslint.config(
-  { ignores: ['dist', 'coverage', 'dev-dev', 'dev-dist', 'node_modules', 'playwright-report', 'test-results', 'supabase/functions/ai/index.ts'] },
+  { ignores: ['public', 'dist', 'coverage', 'dev-dev', 'dev-dist', 'node_modules', 'playwright-report', 'test-results', 'supabase/functions/ai/index.ts'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

@@ -1,3 +1,4 @@
+import { runTx } from '@/data/rows'
 import { addTask, ensureDay, removeTask, updateTask } from '@/data/repos/planner'
 import { dayBundle } from '@/data/repos/planner'
 import { allSlots } from '@/data/repos/timetable'
@@ -56,11 +57,14 @@ export const setTaskStatus = (id: string, status: TaskStatus) => updateTask(id, 
 export const deleteTask = (id: string) => removeTask(id)
 
 /** Carry an unfinished task forward: the original is marked MOVED, a fresh UNTIMED copy lands on `toDate`. */
-export async function moveTaskForward(task: PlannerTaskRow, toDate: string): Promise<PlannerTaskRow> {
-  await updateTask(task.id, { status: 'MOVED' })
-  const r = await addPlannerTask({ date: toDate, title: task.title, priority: task.priority, track: task.track, notes: task.notes, linkedEventId: task.linkedEventId })
-  if (!r.ok) throw new Error(r.reason)
-  return r.task
+export function moveTaskForward(task: PlannerTaskRow, toDate: string): Promise<PlannerTaskRow> {
+  // one transaction: never leave the original MOVED with no copy on the new day
+  return runTx(['plannerTasks', 'plannerDays', 'timetableSlots'], async () => {
+    await updateTask(task.id, { status: 'MOVED' })
+    const r = await addPlannerTask({ date: toDate, title: task.title, priority: task.priority, track: task.track, notes: task.notes, linkedEventId: task.linkedEventId })
+    if (!r.ok) throw new Error(r.reason)
+    return r.task
+  })
 }
 
 export const tomorrowOf = (date: string): string => addDays(date, 1)

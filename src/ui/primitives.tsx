@@ -118,9 +118,9 @@ export function Pill({ children, tone = 'neutral', className, icon }: { children
         't-meta inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 tabular-nums whitespace-nowrap',
         tone === 'neutral' && 'bg-raised text-ink-2',
         tone === 'outline' && 'text-ink-2 ring-1 ring-hairline ring-inset',
-        tone === 'danger' && 'bg-danger/15 text-danger',
-        tone === 'warning' && 'bg-warning/15 text-warning',
-        tone === 'success' && 'bg-success/15 text-success',
+        tone === 'danger' && 'bg-danger/15 text-danger-ink',
+        tone === 'warning' && 'bg-warning/15 text-warning-ink',
+        tone === 'success' && 'bg-success/15 text-success-ink',
         tone === 'accent' && 'bg-accent text-on-accent',
         className,
       )}
@@ -171,7 +171,7 @@ export function Button({
         variant === 'primary' && 'bg-ink text-bg',
         variant === 'secondary' && 'bg-surface text-ink',
         variant === 'ghost' && 'text-ink-2',
-        variant === 'danger' && 'bg-danger/15 text-danger',
+        variant === 'danger' && 'bg-danger/15 text-danger-ink',
         className,
       )}
       {...rest}

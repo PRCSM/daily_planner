@@ -56,7 +56,7 @@ export function DsaScreen() {
               )}
             </span>
             <span role="cell" className="text-right">
-              {m.weak ? <Pill tone="warning">weak</Pill> : m.attempts > 0 && m.attempts < WEAK_MIN_ATTEMPTS ? <span className="t-meta text-ink-3">few</span> : null}
+              {m.weak ? <Pill tone="warning">weak</Pill> : m.attempts > 0 && m.attempts < WEAK_MIN_ATTEMPTS ? <span className="t-meta text-ink-2">few</span> : null}
             </span>
           </div>
         ))}

@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from 'vitest'
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { CalendarScreen } from './CalendarScreen'
 import { EventSheet } from './EventSheet'
@@ -21,7 +21,7 @@ const ui = () => (
     <EventSheet />
   </>
 )
-const cell = (d: string) => screen.getByRole('gridcell', { name: new RegExp(`^${formatDay(d, 'dddd D MMMM')}`) })
+const cell = (d: string) => screen.getByRole('button', { name: new RegExp(`^${formatDay(d, 'dddd D MMMM')}`) })
 
 describe('Calendar', () => {
   it('draws markers by shape for seeded milestones; the 2 Aug HARD milestone is a bar', async () => {
@@ -99,5 +99,37 @@ describe('Calendar', () => {
     await ensureSeeded(true)
     expect((await db.events.get(mimora.id))!.title).toBe('Mimora live')
     expect((await db.events.get(mimora.id))!.userModified).toBe(true)
+  })
+})
+
+describe('Calendar — per-occurrence actions on recurring events', () => {
+  it('skipping ONE occurrence removes just that day; the pattern is untouched', async () => {
+    const u = userEvent.setup()
+    render(ui())
+    await u.click(cell(T0))
+    const sheet = await screen.findByTestId('agenda-sheet')
+    const deepA = (await within(sheet).findByText('Deep A — DSA')).closest('li') as HTMLElement
+    await u.click(within(deepA).getByRole('button', { name: 'Skip this one' }))
+    await waitFor(() => expect(within(sheet).queryByText('Deep A — DSA')).toBeNull())
+    expect((await db.eventOccurrences.toArray())[0]).toMatchObject({ status: 'SKIPPED', occurrenceDate: T0 })
+    await u.click(screen.getByRole('button', { name: 'Close' }))
+    await u.click(cell(addDays(T0, 1)))
+    expect(await within(await screen.findByTestId('agenda-sheet')).findByText('Deep A — DSA')).toBeInTheDocument()
+  })
+
+  it('MOVING an occurrence places it on a date the pattern never produces (a Saturday)', async () => {
+    const u = userEvent.setup()
+    render(ui())
+    await u.click(cell(T0))
+    const sheet = await screen.findByTestId('agenda-sheet')
+    const deepA = (await within(sheet).findByText('Deep A — DSA')).closest('li') as HTMLElement
+    await u.click(within(deepA).getByRole('button', { name: 'Move…' }))
+    const saturday = addDays(T0, 5)
+    fireEvent.change(within(deepA).getByLabelText('Move Deep A — DSA to'), { target: { value: saturday } })
+    await waitFor(async () => expect((await db.eventOccurrences.toArray())[0]).toMatchObject({ status: 'MOVED', movedToDate: saturday }))
+    await u.click(screen.getByRole('button', { name: 'Close' }))
+    await u.click(cell(saturday))
+    const moved = await within(await screen.findByTestId('agenda-sheet')).findAllByText('Deep A — DSA')
+    expect(moved).toHaveLength(1)
   })
 })

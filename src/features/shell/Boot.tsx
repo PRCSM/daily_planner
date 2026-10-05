@@ -18,7 +18,7 @@ export function Boot({ children }: { children: ReactNode }) {
   }, [])
 
   if (state === 'ready') return <>{children}</>
-  if (state === 'loading') return <div className="grid h-full place-items-center"><span className="t-display text-ink-3">cadence</span></div>
+  if (state === 'loading') return <div className="grid h-full place-items-center"><span className="t-display text-ink-2">cadence</span></div>
   return (
     <div className="mx-auto max-w-[520px] p-5">
       <h1 className="t-title">Couldn’t open the local database</h1>

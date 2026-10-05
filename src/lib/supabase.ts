@@ -5,7 +5,7 @@
  * The anon key is public by design (RLS is the protection). The Groq key is NOT here, and never will be:
  * it lives in the Edge Function's secrets.
  */
-import { createClient, type Session, type SupabaseClient } from '@supabase/supabase-js'
+import type { Session, SupabaseClient } from '@supabase/supabase-js'
 import { RemoteError, type PullResult, type PushRow, type Remote } from './remote'
 
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined
@@ -13,10 +13,14 @@ const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
 
 export const isCloudConfigured = (): boolean => Boolean(url && anonKey)
 
-let client: SupabaseClient | null = null
-export function getClient(): SupabaseClient | null {
+let client: Promise<SupabaseClient> | null = null
+/**
+ * The SDK is imported LAZILY: a user who never configures cloud sync never downloads it (it is ~60 kB gzipped,
+ * and the app's first load should be as small as it can be).
+ */
+export function getClient(): Promise<SupabaseClient> | null {
   if (!isCloudConfigured()) return null
-  client ??= createClient(url!, anonKey!, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } })
+  client ??= import('@supabase/supabase-js').then(({ createClient }) => createClient(url!, anonKey!, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }))
   return client
 }
 
@@ -24,7 +28,7 @@ export const functionsUrl = (name: string): string | null => (url ? `${url.repla
 export const anonApiKey = (): string | null => anonKey ?? null
 
 export async function getSession(): Promise<Session | null> {
-  const c = getClient()
+  const c = await getClient()
   if (!c) return null
   const { data } = await c.auth.getSession()
   return data.session
@@ -34,21 +38,30 @@ export async function getAccessToken(): Promise<string | null> {
 }
 
 export function onAuthChange(cb: (email: string | null) => void): () => void {
-  const c = getClient()
-  if (!c) return () => {}
-  const { data } = c.auth.onAuthStateChange((_event, session) => cb(session?.user.email ?? null))
-  return () => data.subscription.unsubscribe()
+  const pending = getClient()
+  if (!pending) return () => {}
+  let off = () => {}
+  let cancelled = false
+  void pending.then((c) => {
+    if (cancelled) return
+    const { data } = c.auth.onAuthStateChange((_event, session) => cb(session?.user.email ?? null))
+    off = () => data.subscription.unsubscribe()
+  })
+  return () => {
+    cancelled = true
+    off()
+  }
 }
 
 export async function signInWithEmail(email: string): Promise<{ ok: true } | { ok: false; message: string }> {
-  const c = getClient()
+  const c = await getClient()
   if (!c) return { ok: false, message: 'Cloud sync is not configured for this build.' }
   const { error } = await c.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.origin } })
   return error ? { ok: false, message: error.message } : { ok: true }
 }
 
 export async function signOut(): Promise<void> {
-  await getClient()?.auth.signOut()
+  await (await getClient())?.auth.signOut()
 }
 
 function classify(error: { message: string; code?: string; status?: number } | null, fallback: string): RemoteError {
@@ -61,14 +74,15 @@ function classify(error: { message: string; code?: string; status?: number } | n
 }
 
 export function createSupabaseRemote(): Remote | null {
-  const c = getClient()
-  if (!c) return null
+  if (!isCloudConfigured()) return null
   return {
     async push(rows: PushRow[]): Promise<void> {
+      const c = (await getClient())!
       const { error } = await c.rpc('sync_push', { p_rows: rows })
       if (error) throw classify(error, 'push failed')
     },
     async pull(sinceSeq: number, limit: number): Promise<PullResult> {
+      const c = (await getClient())!
       const { data, error } = await c
         .from('sync_rows')
         .select('table_name,row_id,data,client_updated_at,deleted_at,seq')
@@ -91,7 +105,7 @@ export function createSupabaseRemote(): Remote | null {
 
 /** "Delete all my cloud data." Local data is untouched. */
 export async function wipeCloud(): Promise<{ ok: boolean; message?: string }> {
-  const c = getClient()
+  const c = await getClient()
   if (!c) return { ok: false, message: 'Not configured' }
   const { error } = await c.rpc('sync_wipe')
   return error ? { ok: false, message: error.message } : { ok: true }

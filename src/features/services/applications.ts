@@ -5,7 +5,16 @@ import type { ApplicationRow } from '@/data/types'
 import type { ApplicationStatus, ApplicationType } from '@/lib/enums'
 import { defaultFollowUp } from '@/domain/applications'
 import { transition } from '@/domain/applicationsFsm'
+import { runTx } from '@/data/rows'
+import type { SyncTable } from '@/lib/enums'
 import { patchDay } from './logging'
+
+/**
+ * Every application write touches several tables (the application, its follow-up EVENT, today's log, and the plan for
+ * the week lookup). They happen in ONE transaction: if the page is closed or a step fails midway, nothing is half-applied
+ * (an APPLIED application without its date, follow-up or log entry).
+ */
+const TABLES: SyncTable[] = ['applications', 'events', 'dailyLogs', 'weeklyTargets']
 
 export interface NewApplicationInput {
   company: string
@@ -36,7 +45,9 @@ async function bumpSent(today: string): Promise<void> {
   await patchDay(today, { applicationsSent: cur + 1 })
 }
 
-export async function createApplication(input: NewApplicationInput, today: string): Promise<ApplicationRow> {
+export const createApplication = (input: NewApplicationInput, today: string): Promise<ApplicationRow> => runTx(TABLES, () => createApplicationTx(input, today))
+
+async function createApplicationTx(input: NewApplicationInput, today: string): Promise<ApplicationRow> {
   const { startStatus, ...rest } = input
   const base = await addApplication({ ...rest, company: input.company.trim(), role: input.role.trim(), status: startStatus })
   if (startStatus !== 'APPLIED') return base
@@ -49,7 +60,9 @@ export async function createApplication(input: NewApplicationInput, today: strin
 export type AdvanceResult = { ok: true; app: ApplicationRow } | { ok: false; reason: string }
 
 /** Move to the next state. Rejected unless the state machine allows it — and the UI only ever offers legal moves. */
-export async function advanceApplication(id: string, to: ApplicationStatus, today: string): Promise<AdvanceResult> {
+export const advanceApplication = (id: string, to: ApplicationStatus, today: string): Promise<AdvanceResult> => runTx(TABLES, () => advanceTx(id, to, today))
+
+async function advanceTx(id: string, to: ApplicationStatus, today: string): Promise<AdvanceResult> {
   const app = await getApplication(id)
   if (!app) return { ok: false, reason: 'Application not found' }
   const t = transition(app.status, to)
@@ -71,7 +84,9 @@ export async function advanceApplication(id: string, to: ApplicationStatus, toda
   return { ok: true, app: await updateApplication(id, patch) }
 }
 
-export async function setFollowUp(id: string, date: string | undefined): Promise<void> {
+export const setFollowUp = (id: string, date: string | undefined): Promise<void> => runTx(TABLES, () => setFollowUpTx(id, date))
+
+async function setFollowUpTx(id: string, date: string | undefined): Promise<void> {
   const app = await getApplication(id)
   if (!app) return
   if (!date) {

@@ -1,3 +1,4 @@
+import { runTx } from '@/data/rows'
 import { allReviews, saveReview } from '@/data/repos/plan'
 import type { WeeklyReviewRow } from '@/data/types'
 import { burnoutFlagFor } from '@/domain/burnout'
@@ -15,7 +16,9 @@ export interface ReviewPatch {
  * Saves the Sunday review, then re-derives burnoutFlag for this week AND the next one
  * (an edit to Q5 changes whether the following week's run of two "no"s exists).
  */
-export async function saveWeeklyReview(weekNumber: number, patch: ReviewPatch): Promise<WeeklyReviewRow> {
+export const saveWeeklyReview = (weekNumber: number, patch: ReviewPatch): Promise<WeeklyReviewRow> => runTx(['weeklyReviews'], () => saveWeeklyReviewTx(weekNumber, patch))
+
+async function saveWeeklyReviewTx(weekNumber: number, patch: ReviewPatch): Promise<WeeklyReviewRow> {
   await saveReview(weekNumber, patch)
   const reviews = await allReviews()
   let saved: WeeklyReviewRow | undefined

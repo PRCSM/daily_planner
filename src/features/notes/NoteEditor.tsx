@@ -173,7 +173,7 @@ function BlockRow({ b, first, last, setRef, onEnter, onBackspaceEmpty, onMove, r
     b.type === 'CODE' && 'rounded-[10px] bg-surface p-3 font-mono text-[13px]',
     b.type === 'QUOTE' && 't-reader border-l-2 border-hairline pl-3 italic',
     (b.type === 'PARAGRAPH' || b.type === 'TODO' || b.type === 'BULLET') && 't-body',
-    b.type === 'TODO' && b.checked && 'text-ink-3 line-through',
+    b.type === 'TODO' && b.checked && 'text-ink-2 line-through',
   )
   return (
     <li className="group flex items-start gap-2 py-0.5" data-testid="block" data-type={b.type}>

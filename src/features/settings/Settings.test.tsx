@@ -87,6 +87,7 @@ describe('Export', () => {
     render(ui())
     await u.click(await screen.findByRole('button', { name: 'Export backup' }))
     const sheet = await screen.findByTestId('export-warning')
+    await waitFor(() => expect(sheet).toHaveAttribute('data-open', 'true')) // the sheet element is pre-mounted; wait until it is actually open
     expect(sheet).toHaveTextContent(/full history/)
     expect(download).not.toHaveBeenCalled() // nothing is saved until you confirm
     expect(within(sheet).queryByTestId('key-warning')).toBeNull()

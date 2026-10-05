@@ -42,7 +42,7 @@ export function NotesScreen() {
                   {link ? <Pill tone="outline">{note.linkType === 'DAY' && note.linkId ? formatDay(note.linkId, 'D MMM') : link}</Pill> : null}
                 </div>
                 {snippet ? <p className="t-label mt-1 line-clamp-2 text-ink-2">{snippet}</p> : null}
-                <p className="t-meta mt-2 text-ink-3">{formatDay(note.updatedAt.slice(0, 10), 'D MMM')}</p>
+                <p className="t-meta mt-2 text-ink-2">{formatDay(note.updatedAt.slice(0, 10), 'D MMM')}</p>
               </Link>
             </li>
           )

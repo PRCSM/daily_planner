@@ -6,13 +6,13 @@ import { agendaFor, FILTER_GROUPS, markersByDate, type Marker } from '@/domain/c
 import { expandEvents, type Occurrence } from '@/domain/recurrence'
 import { effectiveFit } from '@/domain/opportunities'
 import { Button, Chip, IconButton, Note, Pill, Screen, ScreenTitle } from '@/ui/primitives'
-import { Checkbox } from '@/ui/controls'
+import { Checkbox, TextField } from '@/ui/controls'
 import { Sheet } from '@/ui/Sheet'
 import { Icon } from '@/ui/Icon'
 import { cn } from '@/lib/cn'
 import { useUi } from '@/features/store'
 import { useToday } from '@/features/useToday'
-import { setOccurrenceDone } from '@/features/services/events'
+import { moveOccurrence, setOccurrenceDone, skipOccurrence } from '@/features/services/events'
 import { FitPill } from '@/features/opportunities/FitPill'
 
 const DOW = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
@@ -60,10 +60,10 @@ export function CalendarScreen() {
         ))}
       </div>
 
-      <div className="rounded-[14px] bg-surface p-2" role="grid" aria-label={monthLabel(month)}>
-        <div className="grid grid-cols-7" role="row">
+      <div className="rounded-[14px] bg-surface p-2" role="group" aria-label={monthLabel(month)}>
+        <div className="grid grid-cols-7" aria-hidden>
           {DOW.map((d, i) => (
-            <div key={i} role="columnheader" className="t-meta py-1.5 text-center text-ink-2">
+            <div key={i} className="t-meta py-1.5 text-center text-ink-2">
               {d}
             </div>
           ))}
@@ -77,10 +77,9 @@ export function CalendarScreen() {
               <button
                 key={d}
                 type="button"
-                role="gridcell"
                 aria-label={`${formatDay(d, 'dddd D MMMM')}${cell ? `, ${cell.markers.length + cell.extra} item${cell.markers.length + cell.extra === 1 ? '' : 's'}` : ''}`}
                 onClick={() => setDayOpen(d)}
-                className={cn('press flex h-[58px] flex-col items-center gap-1 rounded-[10px] pt-1.5', inMonth ? 'text-ink' : 'text-ink-3', isToday && 'bg-raised')}
+                className={cn('press flex h-[58px] flex-col items-center gap-1 rounded-[10px] pt-1.5', inMonth ? 'text-ink' : 'text-ink-2', isToday && 'bg-raised')}
               >
                 <span className={cn('t-label flex size-6 items-center justify-center rounded-full tabular-nums', isToday && 'bg-accent text-on-accent')}>{Number(d.slice(8))}</span>
                 <span className="flex min-h-2 max-w-full items-center justify-center gap-0.5 overflow-hidden">
@@ -131,6 +130,7 @@ function AgendaSheet({ date, occurrences, today, onClose }: { date: string | nul
                   </div>
                   {o.event.caveat ? <p className="t-label mt-2 text-ink-2">{o.event.caveat}</p> : null}
                   {o.notes ? <p className="t-label mt-1.5 text-ink-2">{o.notes}</p> : null}
+                  {o.event.recurrence !== 'NONE' ? <OccurrenceActions o={o} /> : null}
                   {o.event.linkUrl ? (
                     <a href={o.event.linkUrl} target="_blank" rel="noopener noreferrer" className="t-label mt-2 inline-flex items-center gap-1 underline underline-offset-2">
                       Open link <Icon name="link" size={14} />
@@ -147,5 +147,20 @@ function AgendaSheet({ date, occurrences, today, onClose }: { date: string | nul
         Add event on this day
       </Button>
     </Sheet>
+  )
+}
+
+/** Per-occurrence actions on a recurring event: skip just this one, or MOVE it to a date the pattern never produces. */
+function OccurrenceActions({ o }: { o: Occurrence }) {
+  const [moving, setMoving] = useState(false)
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-2">
+      <Chip onClick={() => void skipOccurrence(o)}>Skip this one</Chip>
+      {moving ? (
+        <TextField type="date" aria-label={`Move ${o.title} to`} className="!w-auto !py-1.5" onChange={(e) => e.target.value && (void moveOccurrence(o, e.target.value), setMoving(false))} />
+      ) : (
+        <Chip onClick={() => setMoving(true)}>Move…</Chip>
+      )}
+    </div>
   )
 }

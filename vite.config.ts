@@ -49,10 +49,18 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.test.{ts,tsx}', 'supabase/**/*.test.ts', 'scripts/**/*.test.{ts,mjs}'],
     css: false,
+    testTimeout: 20_000, // coverage instrumentation makes the keystroke-heavy interaction tests slower
     coverage: {
       provider: 'v8',
       include: ['src/domain/**', 'src/data/**', 'src/lib/**'],
-      exclude: ['**/*.test.*', 'src/test/**', 'src/seed/**'],
+      exclude: ['**/*.test.*', 'src/test/**', 'src/seed/**', 'src/data/sync/index.ts', 'src/data/sync/fakeRemote.ts', 'src/lib/supabase.ts', 'src/lib/enums.ts'],
+      // Asymmetric on purpose: if a bug would quietly give wrong numbers for three weeks, test it exhaustively.
+      thresholds: {
+        'src/domain/**': { statements: 95, branches: 90, functions: 95, lines: 95 },
+        'src/data/sync/**': { statements: 90, branches: 80, functions: 90, lines: 90 },
+        'src/lib/ai/**': { statements: 80, branches: 75, functions: 80, lines: 80 },
+        'src/data/repos/**': { statements: 70, lines: 70 },
+      },
     },
   },
 })

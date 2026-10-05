@@ -38,7 +38,7 @@ export function PlanScreen() {
         <ol className="t-meta mt-2 grid grid-cols-1 gap-0.5 text-ink-2">
           {spans.map((s, i) => (
             <li key={s.phase} className={cn(plan.current && plan.current.weekNumber >= s.firstWeek && plan.current.weekNumber <= s.lastWeek && 'text-ink')}>
-              {i + 1} · {PHASE_LABEL[s.phase]} <span className="text-ink-3">(W{s.firstWeek}{s.lastWeek > s.firstWeek ? `–${s.lastWeek}` : ''})</span>
+              {i + 1} · {PHASE_LABEL[s.phase]} <span className="text-ink-2">(W{s.firstWeek}{s.lastWeek > s.firstWeek ? `–${s.lastWeek}` : ''})</span>
             </li>
           ))}
         </ol>
@@ -88,7 +88,7 @@ function Metric({ label, v }: { label: string; v: WeekRow['dsa'] }) {
 function WeekRowCard({ row, current }: { row: WeekRow; current: boolean }) {
   const { week } = row
   return (
-    <Link to={`/plan/week/${week.weekNumber}`} className={cn('press flex items-center gap-3 rounded-[14px] bg-surface p-4', row.state === 'FUTURE' && 'opacity-90')} aria-label={`Week ${week.weekNumber}`}>
+    <Link to={`/plan/week/${week.weekNumber}`} className="press flex items-center gap-3 rounded-[14px] bg-surface p-4" aria-label={`Week ${week.weekNumber}`}>
       <div className="w-10 shrink-0">
         <div className="t-body-strong flex items-center gap-1.5">
           W{week.weekNumber}

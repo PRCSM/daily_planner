@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { db } from '@/data/db'
 import { advanceApplication, createApplication, setFollowUp } from './applications'
 import { freshDbPerTest } from '@/test/db'
@@ -75,5 +75,25 @@ describe('applications service', () => {
     await setFollowUp(a.id, undefined)
     expect((await db.events.toArray())[0]!.deletedAt).not.toBeNull()
     expect((await db.applications.get(a.id))!.nextFollowUp).toBeUndefined()
+  })
+})
+
+describe('applications are written ATOMICALLY (a closed tab or a failed step never leaves half an application)', () => {
+  it('if the log write fails, the application and its follow-up event are rolled back', async () => {
+    vi.spyOn(db.dailyLogs, 'put').mockRejectedValueOnce(new Error('boom'))
+    await expect(createApplication({ company: 'Acme', role: 'SDE', type: 'FULL_TIME', startStatus: 'APPLIED' }, T0)).rejects.toThrow()
+    expect(await db.applications.count()).toBe(0)
+    expect(await db.events.count()).toBe(0)
+    expect(await db.dailyLogs.count()).toBe(0)
+    vi.restoreAllMocks()
+  })
+  it('advancing to APPLIED rolls back the status too when a later step fails', async () => {
+    const a = await createApplication({ company: 'Acme', role: 'SDE', type: 'FULL_TIME', startStatus: 'SAVED' }, T0)
+    vi.spyOn(db.dailyLogs, 'put').mockRejectedValueOnce(new Error('boom'))
+    await expect(advanceApplication(a.id, 'APPLIED', T0)).rejects.toThrow()
+    expect((await db.applications.get(a.id))).toMatchObject({ status: 'SAVED' })
+    expect((await db.applications.get(a.id))!.appliedDate).toBeUndefined()
+    expect(await db.events.count()).toBe(0)
+    vi.restoreAllMocks()
   })
 })

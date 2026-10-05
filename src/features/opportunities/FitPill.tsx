@@ -14,7 +14,7 @@ export function FitPill({ fit }: { fit: Fit }) {
     case 'MAYBE':
       return <Pill tone="outline">MAYBE</Pill>
     case 'LONGSHOT':
-      return <Pill tone="outline" className="opacity-70">LONGSHOT</Pill>
+      return <Pill tone="outline" className="italic">LONGSHOT</Pill>
     case 'CLOSED':
       return <Pill tone="outline" className="opacity-60">CLOSED</Pill>
   }

@@ -172,7 +172,7 @@ export function LogSheet() {
       </div>
       {suggestions.length > 0 ? (
         <div className="mt-2">
-          <Rail label="Topic suggestions">
+          <Rail label="Suggested topics">
             {suggestions.map((s) => (
               <Chip key={s} onClick={() => setTopic(s)}>
                 {s}
@@ -189,7 +189,7 @@ export function LogSheet() {
           {bundle.blocks.map((b) => (
             <li key={b.id} className="flex items-center gap-3 rounded-[14px] bg-surface p-3.5" data-testid="logged-block">
               <span className="t-body min-w-0 flex-1">
-                <span className="t-body-strong">{TRACK_LABEL[b.track]}:</span> {b.topic ?? <span className="text-ink-3">no topic</span>}
+                <span className="t-body-strong">{TRACK_LABEL[b.track]}:</span> {b.topic ?? <span className="text-ink-2">no topic</span>}
               </span>
               <button
                 type="button"
@@ -218,6 +218,13 @@ export function LogSheet() {
       {/* One-liners */}
       <div className="mt-4 flex flex-col gap-2">
         <LiveText key={`${date}-shipped`} label="Shipped" placeholder="Shipped today (one line)" value={bundle?.log?.shipped ?? ''} onSave={(v) => void patchDay(date, { shipped: v })} />
+        <LiveText
+          key={`${date}-learned`}
+          label="Concepts learned"
+          placeholder="Concepts learned (comma-separated)"
+          value={(bundle?.log?.conceptsLearned ?? []).join(', ')}
+          onSave={(v) => void patchDay(date, { conceptsLearned: v.split(',').map((x) => x.trim()).filter(Boolean).slice(0, 30) })}
+        />
         <LiveText key={`${date}-blockers`} label="Blockers" placeholder="Blockers (one line)" value={bundle?.log?.blockers ?? ''} onSave={(v) => void patchDay(date, { blockers: v })} />
       </div>
 

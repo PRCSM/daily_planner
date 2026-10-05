@@ -105,7 +105,7 @@ export function TimetableScreen() {
                         type="button"
                         aria-label={`${DAY_LABEL[d]} ${p.start}${slot ? `: ${slot.title}` : ': empty'}`}
                         onClick={() => active && void paintCell(d, p, active === ERASE ? null : active)}
-                        className={cn('press t-meta flex h-12 w-full items-center justify-center overflow-hidden rounded-[8px] px-1 text-center leading-tight', slot ? 'bg-raised text-ink' : 'text-ink-3 ring-1 ring-hairline ring-inset')}
+                        className={cn('press t-meta flex h-12 w-full items-center justify-center overflow-hidden rounded-[8px] px-1 text-center leading-tight', slot ? 'bg-raised text-ink' : 'text-ink-2 ring-1 ring-hairline ring-inset')}
                       >
                         {slot ? <span className="line-clamp-2 break-words">{slot.title}</span> : '·'}
                       </button>
