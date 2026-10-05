@@ -22,7 +22,7 @@ describe('ESLint architecture rules fail on planted violations', () => {
     expect(has(m, 'import-x/no-restricted-paths')).toBe(true)
   })
   it('domain/ must not import from ui/ or features/', async () => {
-    const m = await lint('src/domain/x.ts', "import { f } from '@/features/f'\nexport const a = f")
+    const m = await lint('src/domain/x.ts', "import { KitchenSink as f } from '@/features/kitchen-sink/KitchenSink'\nexport const a = f")
     expect(has(m, 'import-x/no-restricted-paths')).toBe(true)
   })
   it('domain/ may import data/types only — not data/db', async () => {
