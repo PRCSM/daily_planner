@@ -1,6 +1,7 @@
-import { Link, useParams } from 'react-router'
+import { Link, useNavigate, useParams } from 'react-router'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { addDeliverable, getReview, setDeliverableDone } from '@/data/repos/plan'
+import { createNote, notesLinkedTo } from '@/data/repos/notes'
 import { formatDay } from '@/domain/dates'
 import { PHASE_LABEL } from '@/lib/enums'
 import { Card, CardList, IconButton, Note, Pill, Row, Screen, ScreenTitle, SectionLabel } from '@/ui/primitives'
@@ -19,6 +20,8 @@ export function WeekScreen() {
   const num = Number(n)
   const today = useToday()
   const plan = usePlan(today)
+  const nav = useNavigate()
+  const linked = useLiveQuery(() => (Number.isInteger(num) ? notesLinkedTo('WEEK', String(num)) : []), [num], [])
   const review = useLiveQuery(() => (Number.isInteger(num) ? getReview(num) : undefined), [num])
   const [newItem, setNewItem] = useState('')
 
@@ -94,6 +97,17 @@ export function WeekScreen() {
           <IconButton icon="plus" label="Add deliverable" className="bg-surface" type="submit" />
         </form>
       </CardList>
+
+      <SectionLabel right={<button type="button" className="t-label press text-ink-2 underline" onClick={async () => nav(`/notes/${(await createNote('', 'WEEK', String(num))).id}`)}>Add note</button>}>Notes</SectionLabel>
+      {linked.length ? (
+        <CardList>
+          {linked.map((n) => (
+            <Link key={n.id} to={`/notes/${n.id}`} className="press t-body block rounded-[14px] bg-surface p-4" data-testid="week-note">{n.title || 'Untitled'}</Link>
+          ))}
+        </CardList>
+      ) : (
+        <Note>No notes linked to this week.</Note>
+      )}
 
       <SectionLabel>Sunday review</SectionLabel>
       <Card className="flex flex-col gap-3" data-testid="review-form">

@@ -29,7 +29,8 @@ export async function createNote(title: string, linkType: NoteLinkType = 'NONE',
 }
 export const updateNote = (id: string, patch: Partial<NoteRow>) => patchRow('notes', id, patch)
 export const removeNote = (id: string) => softDelete('notes', id)
-export const addBlock = (fields: Omit<NoteBlockRow, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'syncedAt'>) => putRow('noteBlocks', makeRow<NoteBlockRow>(fields))
+/** `id` may be supplied so an editor can render the block optimistically before the write lands. */
+export const addBlock = (fields: Omit<NoteBlockRow, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'syncedAt'>, id?: string) => putRow('noteBlocks', makeRow<NoteBlockRow>(fields, id))
 export const updateBlock = async (id: string, patch: Partial<NoteBlockRow>) => {
   const b = await patchRow('noteBlocks', id, patch)
   await patchRow('notes', b.noteId, {}) // touch parent so it sorts to the top

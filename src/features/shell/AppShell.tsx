@@ -1,4 +1,5 @@
-import { Outlet, useLocation } from 'react-router'
+import { Outlet, useLocation, useNavigate } from 'react-router'
+import { createNote } from '@/data/repos/notes'
 import { BottomNav, type FabAction, type NavItem } from '@/ui/Nav'
 import { LogSheet } from '@/features/log/LogSheet'
 import { useUi } from '@/features/store'
@@ -23,6 +24,7 @@ export function navIndexFor(pathname: string): number {
 /** Layout for every screen: routed content, the floating nav + FAB, and the PRE-MOUNTED sheets. */
 export function AppShell() {
   const { pathname } = useLocation()
+  const nav = useNavigate()
   const openLog = useUi((s) => s.openLog)
   const openSheet = useUi((s) => s.openSheet)
   const actions: FabAction[] = [
@@ -30,7 +32,7 @@ export function AppShell() {
     { label: 'Add task', icon: 'check', onSelect: () => openSheet('task', { date: useUi.getState().plannerDate ?? undefined }) },
     { label: 'Add event', icon: 'calendar', onSelect: () => openSheet('event') },
     { label: 'Save application', icon: 'briefcase', onSelect: () => openSheet('application') },
-    { label: 'New note', icon: 'note', onSelect: () => openSheet('note') },
+    { label: 'New note', icon: 'note', onSelect: async () => nav(`/notes/${(await createNote('')).id}`) }, // fast capture: land in the editor
   ]
   return (
     <>

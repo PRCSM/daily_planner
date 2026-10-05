@@ -22,6 +22,8 @@ export const ROUTE_MODULES: Record<string, () => Promise<{ default: React.Compon
   '/opportunities': () => import('./opportunities'),
   '/applications': () => import('./applications'),
   '/timetable': () => import('./timetable'),
+  '/notes': () => import('./notes'),
+  '/notes/:id': () => import('./note'),
   '/plan/week/:n': () => import('./plan-week'),
   '/kitchen-sink': () => import('./kitchen-sink'),
 }

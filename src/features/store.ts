@@ -8,7 +8,7 @@ export interface LogPrefill {
   topic?: string
 }
 
-export type SheetName = 'event' | 'task' | 'application' | 'note'
+export type SheetName = 'event' | 'task' | 'application'
 
 interface UiState {
   /** Day shown on Today (null = the real today). */
