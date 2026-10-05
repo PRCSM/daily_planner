@@ -8,7 +8,6 @@ import { ensureSeeded } from '../seed'
 import { patchRow } from '../rows'
 import { RemoteError } from '@/lib/remote'
 import { localDate, setClockSource } from '@/lib/clock'
-import { addDays } from '@/domain/dates'
 import { T0 } from '@/test/factories'
 import type { EventRow } from '../types'
 
