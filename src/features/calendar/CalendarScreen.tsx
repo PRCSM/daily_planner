@@ -20,7 +20,7 @@ const DOW = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 function MarkerGlyph({ m }: { m: Marker }) {
   // Shape carries criticality; colour appears ONLY when a HARD item is imminent.
   const color = m.imminent ? 'text-danger' : 'text-ink-2'
-  if (m.shape === 'bar') return <span title={m.title} className={cn('block h-1 w-4 rounded-full bg-current', color)} />
+  if (m.shape === 'bar') return <span title={m.title} className={cn('block h-1 w-3 shrink-0 rounded-full bg-current', color)} />
   if (m.shape === 'dot') return <span title={m.title} className={cn('block size-1.5 rounded-full bg-current', color)} />
   return <span title={m.title} className={cn('block size-1.5 rounded-full ring-1 ring-current ring-inset', color)} />
 }
@@ -83,9 +83,9 @@ export function CalendarScreen() {
                 className={cn('press flex h-[58px] flex-col items-center gap-1 rounded-[10px] pt-1.5', inMonth ? 'text-ink' : 'text-ink-3', isToday && 'bg-raised')}
               >
                 <span className={cn('t-label flex size-6 items-center justify-center rounded-full tabular-nums', isToday && 'bg-accent text-on-accent')}>{Number(d.slice(8))}</span>
-                <span className="flex min-h-2 items-center gap-1">
+                <span className="flex min-h-2 max-w-full items-center justify-center gap-0.5 overflow-hidden">
                   {cell?.markers.map((m) => <MarkerGlyph key={m.key} m={m} />)}
-                  {cell && cell.extra > 0 ? <span className="t-meta text-ink-2">+{cell.extra}</span> : null}
+                  {cell && cell.extra > 0 ? <span className="text-[9px] leading-none text-ink-2">+{cell.extra}</span> : null}
                 </span>
               </button>
             )

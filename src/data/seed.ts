@@ -16,7 +16,7 @@ import type { ContentCardRow, ContentPackRow, DailyQuoteRow, DeliverableRow, Eve
  * so a user's edits (a moved study block, a ticked deliverable, a deleted opportunity) are never overwritten.
  * Idempotent: running twice is the same as running once.
  */
-export const SEED_VERSION = 1
+export const SEED_VERSION = 2 // v2: dropped the per-row "typical window" note (shown once on the Opportunities screen instead)
 const META_KEY = 'seedVersion'
 
 const stamps = { createdAt: SEED_STAMP, updatedAt: SEED_STAMP, deletedAt: null, syncedAt: null }

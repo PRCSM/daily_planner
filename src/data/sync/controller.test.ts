@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { CadenceDB } from '../db'
 import { createSyncController } from './controller'
 import { getSyncStatus, setSyncStatus, subscribeSyncStatus } from './status'
@@ -11,7 +11,12 @@ import { T0 } from '@/test/factories'
 
 let db: CadenceDB, cloud: FakeRemote
 let timers: { fn: () => void; ms: number; id: number; live: boolean }[]
-const flush = () => new Promise((r) => setTimeout(r, 20))
+/** Wait for the controller to finish its current run (never a fixed sleep: CI machines are slow). */
+const flush = async () => {
+  await new Promise((r) => setTimeout(r, 5))
+  await vi.waitFor(() => expect(getSyncStatus().state).not.toBe('SYNCING'), { timeout: 3000 })
+  await new Promise((r) => setTimeout(r, 25))
+}
 
 function make(over: Partial<Parameters<typeof createSyncController>[0]> = {}) {
   return createSyncController({

@@ -24,6 +24,7 @@ export function OpportunitiesScreen() {
   return (
     <Screen>
       <ScreenTitle sub="Windows, hackathons, open source — with the judgement attached">opportunities</ScreenTitle>
+      <p className="t-label mb-2 px-1 text-ink-2" data-testid="dates-note">Dates are typical windows, not promises — confirm the exact dates on each official page.</p>
       {months.map((m) => (
         <section key={m.key} aria-label={m.label}>
           <SectionLabel>{m.label}</SectionLabel>

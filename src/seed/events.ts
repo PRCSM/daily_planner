@@ -35,7 +35,6 @@ export const CAVEAT_GITHUB = 'US/Canada/Remote only — useful for the Remote li
 export const CAVEAT_SUMMER_2027 = 'Not your target — you graduate mid-2027 and most require returning to school.'
 export const CAVEAT_QUANT = '~90% of Indian quant hires come from IIT-B/D/K and ISI. WorldQuant Alphathon is the one door with no college filter.'
 export const CAVEAT_IT_SERVICES = 'Aptitude game, not engineering. Your floor, not your ceiling. One Saturday.'
-const NOTE_DATES = 'Typical window — confirm exact dates on the official page.'
 
 interface Opp {
   key: string
@@ -113,7 +112,7 @@ export const OPPORTUNITY_EVENTS: EventSeed[] = OPPS.map((o) => ({
   linkUrl: o.url,
   fitPill: o.fit,
   caveat: o.caveat,
-  notes: o.notes ? `${o.notes} ${NOTE_DATES}` : NOTE_DATES,
+  notes: o.notes,
 }))
 
 export const ALL_EVENT_SEEDS: EventSeed[] = [...STUDY_EVENTS, ...MILESTONES, ...OPPORTUNITY_EVENTS]

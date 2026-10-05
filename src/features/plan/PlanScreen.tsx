@@ -22,21 +22,26 @@ export function PlanScreen() {
 
       {plan.burnout && plan.current ? <BurnoutCard dsaTarget={plan.current.dsaTarget} appTarget={plan.current.applicationTarget} /> : null}
 
-      {/* Phase strip */}
+      {/* Phase strip: numbered segments (width = weeks), named in the legend below */}
       <div className="mb-6" aria-label="Phases">
         <div className="flex gap-1">
-          {spans.map((s) => {
+          {spans.map((s, i) => {
             const active = plan.current && plan.current.weekNumber >= s.firstWeek && plan.current.weekNumber <= s.lastWeek
             return (
-              <div key={s.phase} style={{ flex: s.weeks }} className="min-w-0">
+              <div key={s.phase} style={{ flex: s.weeks }} className="min-w-0" title={PHASE_LABEL[s.phase]}>
                 <div className={cn('h-2 rounded-full', active ? 'bg-ink' : 'bg-raised')} />
-                <div className={cn('t-meta mt-1.5 truncate', active ? 'text-ink' : 'text-ink-2')} title={PHASE_LABEL[s.phase]}>
-                  {PHASE_LABEL[s.phase]}
-                </div>
+                <div className={cn('t-meta mt-1.5 text-center tabular-nums', active ? 'text-ink' : 'text-ink-2')}>{i + 1}</div>
               </div>
             )
           })}
         </div>
+        <ol className="t-meta mt-2 grid grid-cols-1 gap-0.5 text-ink-2">
+          {spans.map((s, i) => (
+            <li key={s.phase} className={cn(plan.current && plan.current.weekNumber >= s.firstWeek && plan.current.weekNumber <= s.lastWeek && 'text-ink')}>
+              {i + 1} · {PHASE_LABEL[s.phase]} <span className="text-ink-3">(W{s.firstWeek}{s.lastWeek > s.firstWeek ? `–${s.lastWeek}` : ''})</span>
+            </li>
+          ))}
+        </ol>
       </div>
 
       <SectionLabel>Weeks</SectionLabel>

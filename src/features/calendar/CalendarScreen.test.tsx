@@ -28,7 +28,7 @@ describe('Calendar', () => {
     render(ui())
     const d = '2026-08-02'
     await waitFor(() => expect(cell(d).getAttribute('aria-label')).toMatch(/item/))
-    expect(cell(d).querySelector('span[title="Mimora deploy done"]')!.className).toMatch(/h-1 w-4/) // filled bar
+    expect(cell(d).querySelector('span[title="Mimora deploy done"]')!.className).toMatch(/h-1 w-3/) // filled bar
   })
 
   it('colour ONLY for HARD-and-imminent: the résumé deadline 12 days out is danger; the milestone already past is not', async () => {

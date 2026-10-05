@@ -62,6 +62,13 @@ describe('Opportunities', () => {
     expect(within(jul).getAllByTestId('opportunity')[0]!.className).toMatch(/opacity-50/)
   })
 
+  it('the "typical dates" note appears ONCE at the top, not repeated on every card', async () => {
+    render(<OpportunitiesScreen />)
+    await screen.findByText('Amazon — SDE new-grad applications')
+    expect(screen.getAllByText(/Dates are typical windows/)).toHaveLength(1)
+    expect(screen.queryAllByText(/confirm exact dates on the official page/)).toHaveLength(0)
+  })
+
   it('lists the 12 portals with their caveats', async () => {
     render(<OpportunitiesScreen />)
     expect(await screen.findByText('Wellfound')).toBeInTheDocument()
