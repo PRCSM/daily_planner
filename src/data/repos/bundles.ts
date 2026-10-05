@@ -1,7 +1,7 @@
 import { db } from '../db'
 import { alive } from '../rows'
 import type { Track } from '@/lib/enums'
-import type { DailyLogRow, DeliverableRow, DsaProblemRow, EventOccurrenceRow, EventRow, LogBlockRow, WeeklyReviewRow, WeeklyTargetRow } from '../types'
+import type { DailyLogRow, DeliverableRow, DsaProblemRow, EventOccurrenceRow, EventRow, LogBlockRow, PlannerDayRow, PlannerTaskRow, TimetableSlotRow, WeeklyReviewRow, WeeklyTargetRow } from '../types'
 
 /**
  * Screen-shaped bundles: ONE Dexie transaction and a fixed number of indexed queries per screen —
@@ -106,5 +106,45 @@ export async function getPlanBundle(): Promise<PlanBundle> {
     logs: alive(await db.dailyLogs.toArray()),
     reviews: alive(await db.weeklyReviews.orderBy('weekNumber').toArray()),
     deliverables: alive(await db.deliverables.toArray()),
+  }))
+}
+
+export interface PlannerBundle {
+  day?: PlannerDayRow
+  tasks: PlannerTaskRow[]
+  slots: TimetableSlotRow[]
+  events: EventRow[]
+  annotations: EventOccurrenceRow[]
+}
+/** The planner day in one transaction: the day + its tasks, the timetable barriers, and that date's plan occurrences. */
+export async function getPlannerBundle(date: string): Promise<PlannerBundle> {
+  return db.transaction('r', [db.plannerDays, db.plannerTasks, db.timetableSlots, db.events, db.eventOccurrences], async () => {
+    const d = await db.plannerDays.where('date').equals(date).first()
+    const day = d && !d.deletedAt ? d : undefined
+    const tasks = day ? alive(await db.plannerTasks.where('dayId').equals(day.id).toArray()).sort((a, b) => a.orderIndex - b.orderIndex) : []
+    const slots = alive(await db.timetableSlots.toArray())
+    const candidates = alive(await db.events.where('date').belowOrEqual(date).toArray()).filter((e) => (e.recurrence === 'NONE' ? (e.endDate ?? e.date) >= date : !e.endDate || e.endDate >= date))
+    const byDate = alive(await db.eventOccurrences.where('occurrenceDate').equals(date).toArray())
+    const byMove = alive(await db.eventOccurrences.where('movedToDate').equals(date).toArray())
+    const annotations = [...new Map([...byDate, ...byMove].map((a) => [a.id, a])).values()]
+    const have = new Set(candidates.map((e) => e.id))
+    const missing = annotations.map((a) => a.eventId).filter((id) => !have.has(id))
+    if (missing.length) for (const e of await db.events.bulkGet(missing)) if (e && !e.deletedAt) candidates.push(e)
+    return { day, tasks, slots, events: candidates, annotations }
+  })
+}
+
+export interface ProgressBundle {
+  weeks: WeeklyTargetRow[]
+  problems: DsaProblemRow[]
+  logs: DailyLogRow[]
+  blocks: LogBlockRow[]
+}
+export async function getProgressBundle(): Promise<ProgressBundle> {
+  return db.transaction('r', [db.weeklyTargets, db.dsaProblems, db.dailyLogs, db.logBlocks], async () => ({
+    weeks: alive(await db.weeklyTargets.orderBy('weekNumber').toArray()),
+    problems: alive(await db.dsaProblems.toArray()),
+    logs: alive(await db.dailyLogs.toArray()),
+    blocks: alive(await db.logBlocks.toArray()),
   }))
 }

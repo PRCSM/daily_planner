@@ -24,6 +24,10 @@ interface UiState {
   openSheet: (name: SheetName, payload?: unknown) => void
   closeSheet: () => void
 
+  /** The day the planner is showing (so the FAB's "Add task" lands on it). */
+  plannerDate: string | null
+  setPlannerDate: (d: string | null) => void
+
   calendarFilters: string[]
   toggleCalendarFilter: (f: string) => void
 }
@@ -40,6 +44,9 @@ export const useUi = create<UiState>((set) => ({
   sheet: { name: null },
   openSheet: (name, payload) => set({ sheet: { name, payload } }),
   closeSheet: () => set({ sheet: { name: null } }),
+
+  plannerDate: null,
+  setPlannerDate: (plannerDate) => set({ plannerDate }),
 
   calendarFilters: [],
   toggleCalendarFilter: (f) => set((s) => ({ calendarFilters: s.calendarFilters.includes(f) ? s.calendarFilters.filter((x) => x !== f) : [...s.calendarFilters, f] })),

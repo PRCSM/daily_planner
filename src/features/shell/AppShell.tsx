@@ -27,7 +27,7 @@ export function AppShell() {
   const openSheet = useUi((s) => s.openSheet)
   const actions: FabAction[] = [
     { label: 'Log today', icon: 'edit', onSelect: () => openLog() },
-    { label: 'Add task', icon: 'check', onSelect: () => openSheet('task') },
+    { label: 'Add task', icon: 'check', onSelect: () => openSheet('task', { date: useUi.getState().plannerDate ?? undefined }) },
     { label: 'Add event', icon: 'calendar', onSelect: () => openSheet('event') },
     { label: 'Save application', icon: 'briefcase', onSelect: () => openSheet('application') },
     { label: 'New note', icon: 'note', onSelect: () => openSheet('note') },
