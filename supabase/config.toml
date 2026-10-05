@@ -1,0 +1,6 @@
+# Supabase CLI config (https://supabase.com/docs/guides/local-development/cli/config)
+project_id = "cadence"
+
+[functions.ai]
+# The gateway verifies the caller's JWT before the function runs: only signed-in users can spend your Groq quota.
+verify_jwt = true

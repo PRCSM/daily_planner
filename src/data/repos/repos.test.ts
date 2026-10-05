@@ -268,3 +268,11 @@ describe('updateSetting is atomic', () => {
     expect((await getSetting<string[]>('subjects', [])).sort()).toEqual(['a', 'b', 'c', 'd', 'e'])
   })
 })
+
+describe('chat message ordering', () => {
+  it('messages added in the same millisecond keep their order (strictly increasing createdAt)', async () => {
+    const t = await Learn.createThread('t', 'GENERAL')
+    for (const c of ['one', 'two', 'three', 'four']) await Learn.addMessage(t.id, c.length % 2 ? 'user' : 'assistant', c) // the clock is frozen: identical stamps
+    expect((await Learn.messagesFor(t.id)).map((m) => m.content)).toEqual(['one', 'two', 'three', 'four'])
+  })
+})

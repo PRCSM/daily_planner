@@ -79,6 +79,11 @@ export default tseslint.config(
     files: ['src/lib/ai/**/*.ts'],
     rules: { 'no-restricted-globals': 'off', 'no-restricted-properties': 'off' },
   },
+  // The Edge Function runs server-side, not in the app bundle: it owns its own network access.
+  {
+    files: ['supabase/functions/**/*.ts'],
+    rules: { 'no-restricted-globals': 'off', 'no-restricted-properties': 'off', 'no-restricted-syntax': 'off' },
+  },
   // The Supabase client module may import the SDK.
   {
     files: ['src/lib/supabase.ts'],
@@ -123,7 +128,7 @@ export default tseslint.config(
   },
   // Tests and tooling may do what they need.
   {
-    files: ['**/*.test.{ts,tsx}', 'src/test/**', 'e2e/**', 'scripts/**', '*.config.{ts,js}'],
+    files: ['**/*.test.{ts,tsx}', 'src/test/**', 'e2e/**', 'scripts/**', 'supabase/**/*.test.ts', '*.config.{ts,js}'],
     languageOptions: { globals: { ...globals.node } },
     rules: {
       'no-restricted-globals': 'off',

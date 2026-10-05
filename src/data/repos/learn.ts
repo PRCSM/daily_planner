@@ -64,7 +64,13 @@ export async function messagesFor(threadId: string): Promise<ChatMessageRow[]> {
 }
 export async function addMessage(threadId: string, role: ChatMessageRow['role'], content: string): Promise<ChatMessageRow> {
   return runTx(['chatMessages', 'chatThreads'], async () => {
-    const m = await putRow('chatMessages', makeRow<ChatMessageRow>({ threadId, role, content }))
+    // Messages are ordered by createdAt; two in the same millisecond would tie and fall back to random-uuid order.
+    // Guarantee a strictly increasing createdAt within a thread.
+    const prev = await db.chatMessages.where('threadId').equals(threadId).toArray()
+    const last = prev.reduce((m, x) => (x.createdAt > m ? x.createdAt : m), '')
+    const row = makeRow<ChatMessageRow>({ threadId, role, content })
+    if (last && row.createdAt <= last) row.createdAt = new Date(Date.parse(last) + 1).toISOString()
+    const m = await putRow('chatMessages', row)
     await patchRow('chatThreads', threadId, {}) // bump updatedAt so the thread sorts first
     return m
   })

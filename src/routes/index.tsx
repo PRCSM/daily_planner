@@ -13,6 +13,7 @@ export const ROUTE_MODULES: Record<string, () => Promise<{ default: React.Compon
   '/more': () => import('./more'),
   '/learn': () => import('./learn'),
   '/learn/pack/:id': () => import('./learn-pack'),
+  '/learn/chat': () => import('./learn-chat'),
   '/planner': () => import('./planner'),
   '/calendar': () => import('./calendar'),
   '/plan': () => import('./plan'),
