@@ -61,10 +61,12 @@ export function LogSheet() {
 
   async function commit() {
     if (!(effMinutes > 0)) return
-    await addLogBlock({ date, track: effTrack, minutes: effMinutes, topic, aiUsed: effAi })
+    const entered = { date, track: effTrack, minutes: effMinutes, topic, aiUsed: effAi }
+    // Clear BEFORE the async write: anything typed while it is in flight belongs to the NEXT block.
     setTopic('')
     setAi(null)
     topicRef.current?.focus() // Enter → ready for the next block
+    await addLogBlock(entered)
   }
 
   // ── date: prev / next / swipe ──
@@ -262,9 +264,10 @@ function DsaQuickAdd({ date, open, weekTopics, problems }: { date: string; open:
 
   async function add() {
     if (!title.trim()) return
-    await addDsaProblem({ title, pattern: pattern ?? defaultPattern, difficulty, status, solvedDate: date })
+    const entered = { title, pattern: pattern ?? defaultPattern, difficulty, status, solvedDate: date }
     setTitle('')
     ref.current?.focus()
+    await addDsaProblem(entered)
   }
 
   return (

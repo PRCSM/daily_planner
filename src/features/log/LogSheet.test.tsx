@@ -45,6 +45,14 @@ describe('Log sheet — the 30-second flow', () => {
     expect(await screen.findAllByTestId('logged-block')).toHaveLength(1)
   })
 
+  it('typing the next topic right after Enter loses nothing (the field clears BEFORE the async write)', async () => {
+    const u = userEvent.setup()
+    await openSheet()
+    await u.type(screen.getByLabelText('Topic'), 'first{Enter}second{Enter}third{Enter}')
+    await waitFor(async () => expect(await db.logBlocks.count()).toBe(3))
+    expect((await db.logBlocks.toArray()).map((b) => b.topic).sort()).toEqual(['first', 'second', 'third'])
+  })
+
   it('chips drive the block: pick a track and a preset, AI defaults ON for shipping tracks', async () => {
     const u = userEvent.setup()
     await openSheet()

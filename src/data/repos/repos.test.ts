@@ -260,3 +260,11 @@ describe('notes / timetable / settings', () => {
     expect(await db.appSettings.count()).toBe(1)
   })
 })
+
+describe('updateSetting is atomic', () => {
+  it('concurrent updates never lose one another', async () => {
+    const { updateSetting } = await import('./settings')
+    await Promise.all(['a', 'b', 'c', 'd', 'e'].map((x) => updateSetting<string[]>('subjects', [], (cur) => [...cur, x])))
+    expect((await getSetting<string[]>('subjects', [])).sort()).toEqual(['a', 'b', 'c', 'd', 'e'])
+  })
+})
