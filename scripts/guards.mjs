@@ -95,7 +95,9 @@ export function scanSource(relPath, text) {
     })
   }
   if (!isTest) {
-    if (!file.startsWith('src/lib/ai/')) check('NETWORK', NETWORK_TOKENS)
+    // src/seed/ is lesson TEXT (it legitimately talks about fetch() and WebSocket); it executes nothing.
+    // The SDK-import check below still applies to it.
+    if (!file.startsWith('src/lib/ai/') && !file.startsWith('src/seed/')) check('NETWORK', NETWORK_TOKENS)
     if (file !== 'src/lib/supabase.ts') check('NETWORK', [[SDK, 'Supabase SDK import outside src/lib/supabase.ts']])
     if (file !== 'src/lib/clock.ts') check('CLOCK', CLOCK_TOKENS)
   }

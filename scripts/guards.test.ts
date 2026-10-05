@@ -47,6 +47,10 @@ describe('guards catch PLANTED violations (a guard you have not seen fail is not
   it('allows fetch inside lib/ai', () => {
     expect(scanSource('src/lib/ai/client.ts', 'await fetch(url)')).toEqual([])
   })
+  it('lesson text in src/seed may mention fetch(), but the SDK rule still applies there', () => {
+    expect(scanSource('src/seed/packs.ts', "const body = 'fetch() returns a promise'")).toEqual([])
+    expect(rules(scanSource('src/seed/x.ts', "import { createClient } from '@supabase/supabase-js'"))).toContain('NETWORK')
+  })
   it('ignores fetch in a comment', () => {
     expect(scanSource('src/features/x.ts', '// fetch(url)\n/* XMLHttpRequest */')).toEqual([])
   })
