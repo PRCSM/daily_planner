@@ -82,3 +82,9 @@ export function resetDb(name = `cadence-test-${Math.random().toString(36).slice(
   db = new CadenceDB(name)
   return db
 }
+
+/** Test seam: make a specific instance the active one (simulate several devices in one process). */
+export function setActiveDb(next: CadenceDB): CadenceDB {
+  db = next
+  return db
+}
