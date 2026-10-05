@@ -28,7 +28,8 @@ export const isStudyBlock = (o: Occurrence): boolean => o.event.type === 'STUDY_
 export function splitToday(occurrences: Occurrence[]): { blocks: Occurrence[]; due: Occurrence[] } {
   return {
     blocks: occurrences.filter(isStudyBlock),
-    due: occurrences.filter((o) => DUE_TYPES.has(o.event.type) && o.event.criticality !== 'INFO'),
+    // A 3-month window isn't "due" every single day: only on the day it opens or closes.
+    due: occurrences.filter((o) => DUE_TYPES.has(o.event.type) && o.event.criticality !== 'INFO' && (!o.span || o.span.isStart || o.span.isEnd)),
   }
 }
 

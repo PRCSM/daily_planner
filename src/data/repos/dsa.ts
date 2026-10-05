@@ -1,8 +1,9 @@
 import { db } from '../db'
-import { alive, makeRow, patchRow, putRow, softDelete } from '../rows'
+import { alive, getAlive, makeRow, patchRow, putRow, softDelete } from '../rows'
 import type { DsaProblemRow } from '../types'
 
 export type NewProblem = Omit<DsaProblemRow, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'syncedAt'>
+export const getProblem = (id: string) => getAlive('dsaProblems', id)
 export const addProblem = (fields: NewProblem) => putRow('dsaProblems', makeRow<DsaProblemRow>(fields))
 export const updateProblem = (id: string, patch: Partial<DsaProblemRow>) => patchRow('dsaProblems', id, patch)
 export const removeProblem = (id: string) => softDelete('dsaProblems', id)

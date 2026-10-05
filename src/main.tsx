@@ -6,6 +6,7 @@ import './index.css'
 import { applyMotionTokens } from '@/ui/motion'
 import { ThemeProvider } from '@/ui/theme'
 import { router } from '@/routes'
+import { Boot } from '@/features/shell/Boot'
 
 applyMotionTokens()
 registerSW({ immediate: true })
@@ -13,7 +14,9 @@ registerSW({ immediate: true })
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider>
-      <RouterProvider router={router} />
+      <Boot>
+        <RouterProvider router={router} />
+      </Boot>
     </ThemeProvider>
   </StrictMode>,
 )

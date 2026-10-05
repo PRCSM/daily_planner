@@ -56,7 +56,7 @@ export function CardList({ children, className }: { children: ReactNode; classNa
 
 export function SectionLabel({ children, right, className }: { children: ReactNode; right?: ReactNode; className?: string }) {
   return (
-    <div className={cn('mt-6 mb-2 flex items-center justify-between px-1 first:mt-0', className)}>
+    <div className={cn('mt-6 mb-2 flex items-center justify-between px-1', className)}>
       <h2 className="t-label text-ink-2 uppercase tracking-wider">{children}</h2>
       {right}
     </div>

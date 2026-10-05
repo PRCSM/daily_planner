@@ -1,5 +1,5 @@
 import { db } from '../db'
-import { alive, makeRow, patchRow, putRow, runTx, softDelete } from '../rows'
+import { alive, getAlive, makeRow, patchRow, putRow, runTx, softDelete } from '../rows'
 import { detId } from '@/lib/ids'
 import type { Track } from '@/lib/enums'
 import type { DailyLogRow, LogBlockRow } from '../types'
@@ -31,6 +31,7 @@ export async function blocksForLog(logId: string): Promise<LogBlockRow[]> {
   return alive(await db.logBlocks.where('logId').equals(logId).toArray()).sort((a, b) => a.createdAt.localeCompare(b.createdAt))
 }
 
+export const getBlock = (id: string) => getAlive('logBlocks', id)
 export const addBlock = (row: LogBlockRow) => putRow('logBlocks', row)
 export const updateBlock = (id: string, patch: Partial<LogBlockRow>) => patchRow('logBlocks', id, patch)
 export const removeBlock = (id: string) => softDelete('logBlocks', id)

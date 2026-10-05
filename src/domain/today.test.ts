@@ -26,6 +26,11 @@ describe('today', () => {
     expect(blocks).toHaveLength(1)
     expect(due.map((o) => o.event.type)).toEqual(['MILESTONE'])
   })
+  it('a long span is due only on its first and last day, not every day in between', () => {
+    const w = mkEvent({ type: 'HIRING_WINDOW', criticality: 'SOFT', date: T0, endDate: addDays(T0, 10) })
+    const dueOn = (d: string) => splitToday(occurrencesOn([w], [], d)).due.length
+    expect([dueOn(T0), dueOn(addDays(T0, 5)), dueOn(addDays(T0, 10))]).toEqual([1, 0, 1])
+  })
   it('deadline pill: HARD, not done, within <14 days; nearest wins', () => {
     const far = mkEvent({ title: 'far', criticality: 'HARD', date: addDays(T0, 13) })
     const near = mkEvent({ title: 'near', criticality: 'HARD', date: addDays(T0, 4) })
