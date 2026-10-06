@@ -1,6 +1,6 @@
-import { GROQ_BASE, modelsFrom } from './models'
-import { chatMessages, packMessages, type Msg } from './prompts'
-import { MAX_BODY_BYTES, parseRequest } from './validate'
+import { GROQ_BASE, modelsFrom } from './models.ts'
+import { chatMessages, packMessages, type Msg } from './prompts.ts'
+import { MAX_BODY_BYTES, parseRequest } from './validate.ts'
 
 /**
  * The AI Edge Function core. Pure of Deno APIs (env, fetch and the clock are injected) so it is unit-tested with

@@ -1,4 +1,4 @@
-import type { Turn } from './validate'
+import type { Turn } from './validate.ts'
 
 export type Msg = { role: 'system' | 'user' | 'assistant'; content: string }
 

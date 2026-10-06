@@ -96,6 +96,16 @@ tests (48 files, 96% statement coverage overall, per-layer thresholds enforced) 
   right after Enter); concurrent settings read-modify-write; same-millisecond chat ordering; a half-written application when the page is left
   mid-write; chip-group inside a `<label>` mis-naming its first chip.
 
+## Deployment (2026-10-06)
+
+- **Supabase** project `Cadence` (`tuaadqinqhiwksuuwtfa`, ap-southeast-1): `sync_rows` + RLS (forced, 4 owner-only policies) + `sync_push` / `sync_wipe`
+  applied and checked (anon has no table or function access). Edge Function `ai` deployed with `verify_jwt = true`.
+  The migration was applied in four parts because one large `apply_migration` call timed out at the MCP layer.
+- **Edge Function imports now carry `.ts` extensions** (Deno requires them; `allowImportingTsExtensions` was already on).
+- **`GROQ_API_KEY` is NOT set yet**: the Supabase MCP has no secrets tool. Set it with `supabase secrets set GROQ_API_KEY=…` or in the
+  dashboard (Edge Functions → Secrets). Until then the function answers `NO_KEY` and Learn → chat says AI is not configured.
+- **Vercel** project `cadence` linked to this repo; `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` set (public values by design).
+
 ## Open issues / needs the owner
 
 - **Not created from here** (they need your accounts): the Supabase project, the Edge Function secret, and the Vercel/Netlify project. The
