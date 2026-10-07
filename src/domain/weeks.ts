@@ -5,7 +5,7 @@ import type { WeeklyTargetRow } from '@/data/types'
 
 export const PLAN_WEEKS = 18
 /** Used only when the weeklyTargets table hasn't loaded yet. */
-export const PLAN_START_FALLBACK = '2026-07-13'
+export const PLAN_START_FALLBACK = '2026-10-05'
 export const planStartOf = (weeks: Pick<WeeklyTargetRow, 'weekNumber' | 'startDate'>[]): DateStr => weeks.find((w) => w.weekNumber === 1)?.startDate ?? PLAN_START_FALLBACK
 
 /** Week number of `date` relative to the plan start (a Monday). Week 1 is the start week; ≤0 = before the plan, >18 = after. */

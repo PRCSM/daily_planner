@@ -81,6 +81,7 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
   --color-danger-ink: var(--danger-ink);
   --color-success-ink: var(--success-ink);
   --color-warning-ink: var(--warning-ink);

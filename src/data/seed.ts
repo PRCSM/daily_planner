@@ -6,6 +6,7 @@ import { ALL_EVENT_SEEDS } from '@/seed/events'
 import { PACKS } from '@/seed/packs'
 import { PORTALS } from '@/seed/portals'
 import { QUOTES } from '@/seed/quotes'
+import { buildCapgeminiRows, loadCapgemini } from '@/seed/capgemini'
 import { SEED_STAMP, addDaysStr } from '@/seed/util'
 import { DELIVERABLES, WEEKS, weekEnd, weekStart } from '@/seed/weeks'
 import { db } from './db'
@@ -16,7 +17,7 @@ import type { ContentCardRow, ContentPackRow, DailyQuoteRow, DeliverableRow, Eve
  * so a user's edits (a moved study block, a ticked deliverable, a deleted opportunity) are never overwritten.
  * Idempotent: running twice is the same as running once.
  */
-export const SEED_VERSION = 2 // v2: dropped the per-row "typical window" note (shown once on the Opportunities screen instead)
+export const SEED_VERSION = 3 // v3: plan re-based to start Mon 5 Oct 2026 (was 13 Jul); Capgemini prep content added. v2: dropped the per-row "typical window" note
 const META_KEY = 'seedVersion'
 
 const stamps = { createdAt: SEED_STAMP, updatedAt: SEED_STAMP, deletedAt: null, syncedAt: null }
@@ -75,6 +76,8 @@ export interface SeedReport {
   keptUserModified: number
   removed: number
   invalidPacks: string[]
+  /** The Capgemini chunk couldn't be loaded: nothing was written and the seed will be retried on the next launch. */
+  deferred?: boolean
 }
 
 type SeededRow = { id: string; seeded?: boolean; userModified?: boolean; deletedAt: string | null; createdAt: string }
@@ -111,8 +114,20 @@ export async function ensureSeeded(force = false): Promise<SeedReport> {
   const current = ((await db.syncMeta.get(META_KEY))?.value as number | undefined) ?? 0
   const report: SeedReport = { ran: false, version: SEED_VERSION, inserted: 0, updated: 0, keptUserModified: 0, removed: 0, invalidPacks: [] }
   if (!force && current >= SEED_VERSION) return report
-  const rows = buildSeedRows()
-  report.invalidPacks = rows.invalid
+  const core = buildSeedRows()
+  // The Capgemini prep content is a lazily-loaded chunk. It must be fetched BEFORE the transaction opens
+  // (awaiting a non-Dexie promise inside one would let it auto-commit). If it can't be loaded, change NOTHING and
+  // keep the old version, so the next launch retries — seeding without it would make a later run treat the
+  // already-seeded exam packs as "left the bundle" and delete them.
+  let capg: ReturnType<typeof buildCapgeminiRows>
+  try {
+    capg = buildCapgeminiRows(await loadCapgemini())
+  } catch {
+    report.deferred = true
+    return report
+  }
+  const rows = { ...core, events: [...core.events, ...capg.events], contentPacks: [...core.contentPacks, ...capg.contentPacks], contentCards: [...core.contentCards, ...capg.contentCards] }
+  report.invalidPacks = [...core.invalid, ...capg.invalid]
   await db.transaction('rw', [db.weeklyTargets, db.deliverables, db.events, db.dailyQuotes, db.portals, db.contentPacks, db.contentCards, db.syncMeta], async () => {
     await syncTable('weeklyTargets', rows.weeklyTargets, report)
     await syncTable('deliverables', rows.deliverables, report)

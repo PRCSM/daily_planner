@@ -24,19 +24,22 @@ const ui = () => (
 const cell = (d: string) => screen.getByRole('button', { name: new RegExp(`^${formatDay(d, 'dddd D MMMM')}`) })
 
 describe('Calendar', () => {
-  it('draws markers by shape for seeded milestones; the 2 Aug HARD milestone is a bar', async () => {
+  it('draws markers by shape for seeded milestones; the 25 Oct HARD milestone is a bar', async () => {
     render(ui())
-    const d = '2026-08-02'
+    const d = '2026-10-25'
     await waitFor(() => expect(cell(d).getAttribute('aria-label')).toMatch(/item/))
     expect(cell(d).querySelector('span[title="Mimora deploy done"]')!.className).toMatch(/h-1 w-3/) // filled bar
   })
 
   it('colour ONLY for HARD-and-imminent: the résumé deadline 12 days out is danger; the milestone already past is not', async () => {
     render(ui())
-    const soon = '2026-08-15' // T0 + 12 days, HARD, not done
+    const soon = '2026-11-07' // T0 + 12 days, HARD, not done — falls in the NEXT month's grid
+    await userEvent.setup().click(await screen.findByRole('button', { name: 'Next month' }))
     await waitFor(() => expect(cell(soon).getAttribute('aria-label')).toMatch(/item/))
     expect(cell(soon).querySelector('span[title="RESUME + GITHUB + PORTFOLIO SHIPPED"]')!.className).toMatch(/text-danger/)
-    expect(cell('2026-08-02').querySelector('span[title="Mimora deploy done"]')!.className).not.toMatch(/text-danger/)
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Jump to this month' }))
+    await waitFor(() => expect(cell('2026-10-25').querySelector('span[title="Mimora deploy done"]')).not.toBeNull())
+    expect(cell('2026-10-25').querySelector('span[title="Mimora deploy done"]')!.className).not.toMatch(/text-danger/)
   })
 
   it('tapping a day opens its agenda, including study blocks; ticking an item persists', async () => {

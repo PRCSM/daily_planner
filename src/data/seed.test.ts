@@ -14,6 +14,7 @@ import { CAVEAT_GITHUB, CAVEAT_IT_SERVICES, CAVEAT_QUANT, CAVEAT_SUMMER_2027 } f
 import { PACKS } from '@/seed/packs'
 import { QUOTES } from '@/seed/quotes'
 import { PORTALS } from '@/seed/portals'
+import { loadCapgemini } from '@/seed/capgemini'
 
 freshDbPerTest()
 
@@ -35,8 +36,8 @@ describe('seed content (the bundle itself)', () => {
       if (i > 0) expect(x.startDate).toBe(addDays(w[i - 1]!.endDate, 1))
       expect(x.phase).toBe(phaseForWeek(x.weekNumber))
     })
-    expect(w[0]!.startDate).toBe('2026-07-13')
-    expect(w[17]!.endDate).toBe('2026-11-15')
+    expect(w[0]!.startDate).toBe('2026-10-05') // the plan starts Mon 5 Oct 2026 (the day work began, re-based from 13 Jul)
+    expect(w[17]!.endDate).toBe('2027-02-07')
   })
   it('targets per phase', () => {
     const by = (n: number) => rows.weeklyTargets.find((x) => x.weekNumber === n)!
@@ -73,10 +74,10 @@ describe('seed content (the bundle itself)', () => {
   })
   it('the milestones the plan hinges on exist and are HARD', () => {
     const hard = new Map(rows.events.filter((e) => e.criticality === 'HARD').map((e) => [e.title, e]))
-    expect(hard.get('Mimora deploy done')!.date).toBe('2026-08-02')
-    expect(hard.get('RESUME + GITHUB + PORTFOLIO SHIPPED')!.date).toBe('2026-08-15')
-    expect(hard.get('GenAI flagship shipped')!.date).toBe('2026-11-01')
-    expect(hard.get('Plan ends — write the retrospective')!.date).toBe('2026-11-15')
+    expect(hard.get('Mimora deploy done')!.date).toBe('2026-10-25')
+    expect(hard.get('RESUME + GITHUB + PORTFOLIO SHIPPED')!.date).toBe('2026-11-07')
+    expect(hard.get('GenAI flagship shipped')!.date).toBe('2027-01-24')
+    expect(hard.get('Plan ends — write the retrospective')!.date).toBe('2027-02-07')
     const google = rows.events.find((e) => e.title.startsWith('Google'))!
     expect(google.criticality).toBe('HARD')
     expect((google.notes ?? '') + google.title).toMatch(/2–4 weeks|SHORT/i)
@@ -129,7 +130,7 @@ describe('ensureSeeded (idempotent, user-safe)', () => {
     expect(r.ran).toBe(true)
     expect(r.invalidPacks).toEqual([])
     expect(await db.weeklyTargets.count()).toBe(18)
-    expect(await db.contentPacks.count()).toBe(12)
+    expect(await db.contentPacks.count()).toBe(12 + (await loadCapgemini()).packs.length) // the 12 core packs + the Capgemini prep packs
     expect(await db.syncQueue.count()).toBe(0)
   })
   it('is idempotent — a second run is a no-op, and a forced one changes nothing', async () => {
@@ -182,7 +183,7 @@ describe('ensureSeeded (idempotent, user-safe)', () => {
   })
   it('study blocks recur WEEKDAYS Mon–Fri across the whole plan from one row each (nothing materialised)', async () => {
     await ensureSeeded()
-    const study = (await db.events.toArray()).filter((e) => e.type === 'STUDY_BLOCK')
+    const study = (await db.events.toArray()).filter((e) => e.type === 'STUDY_BLOCK' && e.recurrence !== 'NONE') // the 60 one-off Capgemini day blocks are separate rows
     expect(study).toHaveLength(6)
     expect(study.filter((e) => e.recurrence === 'WEEKDAYS')).toHaveLength(3)
   })

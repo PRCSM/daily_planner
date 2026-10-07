@@ -1,9 +1,9 @@
-import type { DailyLogRow, DsaProblemRow, EventOccurrenceRow, EventRow, LogBlockRow, WeeklyReviewRow, WeeklyTargetRow } from '@/data/types'
+import type { ContentPackRow, DailyLogRow, DsaProblemRow, EventOccurrenceRow, EventRow, LogBlockRow, WeeklyReviewRow, WeeklyTargetRow } from '@/data/types'
 import { addDays } from '@/domain/dates'
 import { phaseForWeek } from '@/domain/weeks'
 
 /** The fixed fixture clock for tests: a Monday that is week 1 of the plan. Everything else is derived from it. */
-export const PLAN_START = '2026-07-13'
+export const PLAN_START = '2026-10-05'
 export const T0 = addDays(PLAN_START, 21) // a Monday in week 4
 
 let n = 0
@@ -11,6 +11,9 @@ const base = () => ({ id: `id-${++n}`, createdAt: '2026-01-01T00:00:00.000Z', up
 
 export const mkEvent = (o: Partial<EventRow> = {}): EventRow => ({
   ...base(), title: 'Event', type: 'CUSTOM', date: T0, criticality: 'SOFT', recurrence: 'NONE', sourceModule: 'CALENDAR', done: false, seeded: false, userModified: false, ...o,
+})
+export const mkPack = (o: Partial<ContentPackRow> = {}): ContentPackRow => ({
+  ...base(), title: 'Pack', topic: 'x', summary: 's', tags: [], source: 'SEEDED', totalCards: 3, estimatedMinutes: 3, seeded: true, userModified: false, ...o,
 })
 export const mkAnn = (o: Partial<EventOccurrenceRow> & Pick<EventOccurrenceRow, 'eventId' | 'occurrenceDate' | 'status'>): EventOccurrenceRow => ({ ...base(), ...o })
 

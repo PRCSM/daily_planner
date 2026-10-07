@@ -1,6 +1,8 @@
 import { db } from '../db'
 import { alive } from '../rows'
 import type { Track } from '@/lib/enums'
+import { CAPG_EXAM_SEED_KEY } from '@/lib/capgemini'
+import { detId } from '@/lib/ids'
 import type { ContentPackRow, DailyLogRow, DailyQuoteRow, DeliverableRow, PackProgressRow, DsaProblemRow, EventOccurrenceRow, EventRow, LogBlockRow, PlannerDayRow, PlannerTaskRow, TimetableSlotRow, WeeklyReviewRow, WeeklyTargetRow } from '../types'
 
 /**
@@ -154,12 +156,18 @@ export interface LearnBundle {
   quotes: DailyQuoteRow[]
   packs: ContentPackRow[]
   progress: PackProgressRow[]
+  /** The Capgemini exam milestone (the user edits its date once confirmed); absent if deleted. */
+  exam?: EventRow
 }
 export async function getLearnBundle(): Promise<LearnBundle> {
-  return db.transaction('r', [db.weeklyTargets, db.dailyQuotes, db.contentPacks, db.packProgress], async () => ({
-    weeks: alive(await db.weeklyTargets.orderBy('weekNumber').toArray()),
-    quotes: alive(await db.dailyQuotes.toArray()),
-    packs: alive(await db.contentPacks.toArray()),
-    progress: alive(await db.packProgress.toArray()),
-  }))
+  return db.transaction('r', [db.weeklyTargets, db.dailyQuotes, db.contentPacks, db.packProgress, db.events], async () => {
+    const exam = await db.events.get(detId('seed:event', CAPG_EXAM_SEED_KEY))
+    return {
+      weeks: alive(await db.weeklyTargets.orderBy('weekNumber').toArray()),
+      quotes: alive(await db.dailyQuotes.toArray()),
+      packs: alive(await db.contentPacks.toArray()),
+      progress: alive(await db.packProgress.toArray()),
+      exam: exam && !exam.deletedAt ? exam : undefined,
+    }
+  })
 }

@@ -3,7 +3,7 @@ import { Pill } from '@/ui/primitives'
 
 /**
  * Fit pills carry judgement, not alarm — so they stay monochrome. Weight, not colour:
- * APPLY is the strongest (filled), then GOOD, MAYBE (outline), LONGSHOT (outline, quieter), CLOSED (dim).
+ * APPLY is the strongest (filled), then GOOD, MAYBE (outline), LONGSHOT (outline, quieter), CLOSED (outline, the row itself muted).
  */
 export function FitPill({ fit }: { fit: Fit }) {
   switch (fit) {
@@ -16,6 +16,7 @@ export function FitPill({ fit }: { fit: Fit }) {
     case 'LONGSHOT':
       return <Pill tone="outline" className="italic">LONGSHOT</Pill>
     case 'CLOSED':
-      return <Pill tone="outline" className="opacity-60">CLOSED</Pill>
+      // Quiet by being outline-only, never by opacity: faded text fails contrast (WCAG 1.4.3).
+      return <Pill tone="outline">CLOSED</Pill>
   }
 }

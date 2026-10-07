@@ -11,7 +11,7 @@ export interface WeekSeed {
 }
 
 /**
- * 18 weeks, Week 1 starting Mon 13 Jul 2026. DSA targets sum to 363
+ * 18 weeks, Week 1 starting Mon 5 Oct 2026 (the first scheduled day is Wed 7 Oct). DSA targets sum to 363
  * (303 new patterns W1–14 + 60 revision W15–18). The 363 is DERIVED from these rows everywhere —
  * never a literal.
  *
@@ -52,9 +52,9 @@ export const DELIVERABLES: DeliverableSeed[] = [
   { weekNumber: 1, text: 'Dev environment + this app in daily use (log every day)' },
   { weekNumber: 1, text: 'JS + Python refresher notes pushed to a repo' },
   { weekNumber: 2, text: 'Mimora: core flow working locally' },
-  { weekNumber: 3, text: 'Mimora deployed — live URL', dueDate: '2026-08-02' },
+  { weekNumber: 3, text: 'Mimora deployed — live URL' },
   { weekNumber: 4, text: 'Resume v1 + GitHub profile README drafted' },
-  { weekNumber: 5, text: 'Resume + GitHub + portfolio SHIPPED', dueDate: '2026-08-15' },
+  { weekNumber: 5, text: 'Resume + GitHub + portfolio SHIPPED', dueDate: addDaysStr(weekStart(5), 5) },
   { weekNumber: 6, text: 'First applications out (target in the week row)' },
   { weekNumber: 7, text: 'OS notes: processes, threads, scheduling, memory' },
   { weekNumber: 8, text: 'Caching write-up (blog or README)' },
@@ -65,8 +65,8 @@ export const DELIVERABLES: DeliverableSeed[] = [
   { weekNumber: 13, text: 'GenAI flagship: RAG pipeline working' },
   { weekNumber: 14, text: 'GenAI flagship: agent / tool-use layer' },
   { weekNumber: 15, text: 'GenAI flagship: evals + demo polish' },
-  { weekNumber: 16, text: 'GenAI flagship deployed + README', dueDate: '2026-11-01' },
+  { weekNumber: 16, text: 'GenAI flagship deployed + README' },
   { weekNumber: 16, text: 'Two full mock interviews (DSA + design)' },
   { weekNumber: 17, text: 'Resume re-cut per application type' },
-  { weekNumber: 18, text: 'Plan retrospective written', dueDate: '2026-11-15' },
+  { weekNumber: 18, text: 'Plan retrospective written' },
 ]

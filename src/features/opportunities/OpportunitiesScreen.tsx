@@ -66,11 +66,12 @@ function OppCard({ r, showCaveat }: { r: OppRow; showCaveat: boolean }) {
   const openSheet = useUi((s) => s.openSheet)
   const e = r.event
   return (
-    // CLOSED items dim and sink — they never disappear.
-    <Card className={cn(r.closed && 'opacity-50')} data-testid="opportunity" data-closed={r.closed}>
+    // CLOSED items quieten and sink — they never disappear. Quieter means a muted text colour, never opacity:
+    // faded text drops below the 4.5:1 contrast minimum.
+    <Card data-testid="opportunity" data-closed={r.closed}>
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
-          <div className="t-body-strong">{e.title}</div>
+          <div className={cn('t-body-strong', r.closed && 'font-medium text-ink-2')}>{e.title}</div>
           <div className="t-meta mt-0.5 text-ink-2">
             {range(e)}
             {e.criticality === 'HARD' && !r.closed ? ' · hard window' : ''}
@@ -82,7 +83,7 @@ function OppCard({ r, showCaveat }: { r: OppRow; showCaveat: boolean }) {
       {e.notes ? <p className="t-meta mt-1.5 text-ink-2">{e.notes}</p> : null}
       <div className="mt-3 flex items-center gap-4">
         {e.linkUrl ? (
-          <a href={e.linkUrl} target="_blank" rel="noopener noreferrer" className="t-label inline-flex items-center gap-1 underline underline-offset-2">
+          <a href={e.linkUrl} target="_blank" rel="noopener noreferrer" className={cn('t-label inline-flex items-center gap-1 underline underline-offset-2', r.closed && 'text-ink-2')}>
             Apply / details <Icon name="link" size={14} />
           </a>
         ) : null}

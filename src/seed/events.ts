@@ -1,17 +1,18 @@
 import type { EventRow } from '@/data/types'
 import type { Criticality, EventType, FitPill } from '@/lib/enums'
-import { PLAN_END, PLAN_START } from './util'
+import { PLAN_BEGIN, PLAN_END, PLAN_START, addDaysStr } from './util'
+import { weekEnd, weekStart } from './weeks'
 
 export type EventSeed = Omit<EventRow, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt' | 'syncedAt' | 'seeded' | 'userModified' | 'done'> & { key: string }
 
 /** The daily rhythm. Times are defaults — edit any of them; an edited seed row is never overwritten by a re-seed. */
 export const STUDY_EVENTS: EventSeed[] = [
-  { key: 'study-deep-a', title: 'Deep A — DSA', type: 'STUDY_BLOCK', date: PLAN_START, endDate: PLAN_END, recurrence: 'WEEKDAYS', startTime: '06:30', endTime: '08:30', track: 'DSA', criticality: 'SOFT', sourceModule: 'PLAN', notes: 'AI off. This week’s patterns first; unseen problems, timed.' },
-  { key: 'study-deep-b', title: 'Deep B — core / design', type: 'STUDY_BLOCK', date: PLAN_START, endDate: PLAN_END, recurrence: 'WEEKDAYS', startTime: '19:00', endTime: '21:00', track: 'CORE_CS', criticality: 'SOFT', sourceModule: 'PLAN', notes: 'AI off. The week’s non-DSA topic: CS fundamentals, system design, OOP/LLD.' },
-  { key: 'study-block-c', title: 'Block C — apply · write · ship', type: 'STUDY_BLOCK', date: PLAN_START, endDate: PLAN_END, recurrence: 'WEEKDAYS', startTime: '21:00', endTime: '22:00', track: 'APPLICATIONS', criticality: 'SOFT', sourceModule: 'PLAN', notes: 'AI on. Applications, résumé, project work, writing.' },
-  { key: 'study-weekend-build', title: 'Weekend build', type: 'STUDY_BLOCK', date: '2026-07-18', endDate: PLAN_END, recurrence: 'WEEKLY', startTime: '09:00', endTime: '13:00', track: 'PROJECT', criticality: 'SOFT', sourceModule: 'PLAN', notes: 'Ship something. AI on.' },
-  { key: 'study-weekend-dsa', title: 'Weekend DSA + revision', type: 'STUDY_BLOCK', date: '2026-07-19', endDate: PLAN_END, recurrence: 'WEEKLY', startTime: '10:00', endTime: '12:00', track: 'DSA', criticality: 'SOFT', sourceModule: 'PLAN', notes: 'Clear the review queue first, then new problems.' },
-  { key: 'study-sunday-review', title: 'Sunday review', type: 'STUDY_BLOCK', date: '2026-07-19', endDate: PLAN_END, recurrence: 'WEEKLY', startTime: '20:00', endTime: '20:30', track: 'WRITING', criticality: 'SOFT', sourceModule: 'PLAN', notes: 'Five questions, honestly. Q5 is about sleep, training and rest.' },
+  { key: 'study-deep-a', title: 'Deep A — DSA', type: 'STUDY_BLOCK', date: PLAN_BEGIN, endDate: PLAN_END, recurrence: 'WEEKDAYS', startTime: '06:30', endTime: '08:30', track: 'DSA', criticality: 'SOFT', sourceModule: 'PLAN', notes: 'AI off. This week’s patterns first; unseen problems, timed.' },
+  { key: 'study-deep-b', title: 'Deep B — core / design', type: 'STUDY_BLOCK', date: PLAN_BEGIN, endDate: PLAN_END, recurrence: 'WEEKDAYS', startTime: '19:00', endTime: '21:00', track: 'CORE_CS', criticality: 'SOFT', sourceModule: 'PLAN', notes: 'AI off. The week’s non-DSA topic: CS fundamentals, system design, OOP/LLD.' },
+  { key: 'study-block-c', title: 'Block C — apply · write · ship', type: 'STUDY_BLOCK', date: PLAN_BEGIN, endDate: PLAN_END, recurrence: 'WEEKDAYS', startTime: '21:00', endTime: '22:00', track: 'APPLICATIONS', criticality: 'SOFT', sourceModule: 'PLAN', notes: 'AI on. Applications, résumé, project work, writing.' },
+  { key: 'study-weekend-build', title: 'Weekend build', type: 'STUDY_BLOCK', date: addDaysStr(PLAN_START, 5), endDate: PLAN_END, recurrence: 'WEEKLY', startTime: '09:00', endTime: '13:00', track: 'PROJECT', criticality: 'SOFT', sourceModule: 'PLAN', notes: 'Ship something. AI on.' },
+  { key: 'study-weekend-dsa', title: 'Weekend DSA + revision', type: 'STUDY_BLOCK', date: addDaysStr(PLAN_START, 6), endDate: PLAN_END, recurrence: 'WEEKLY', startTime: '10:00', endTime: '12:00', track: 'DSA', criticality: 'SOFT', sourceModule: 'PLAN', notes: 'Clear the review queue first, then new problems.' },
+  { key: 'study-sunday-review', title: 'Sunday review', type: 'STUDY_BLOCK', date: addDaysStr(PLAN_START, 6), endDate: PLAN_END, recurrence: 'WEEKLY', startTime: '20:00', endTime: '20:30', track: 'WRITING', criticality: 'SOFT', sourceModule: 'PLAN', notes: 'Five questions, honestly. Q5 is about sleep, training and rest.' },
 ]
 
 const m = (key: string, title: string, date: string, criticality: Criticality, weekNumber: number, notes?: string): EventSeed => ({
@@ -19,15 +20,15 @@ const m = (key: string, title: string, date: string, criticality: Criticality, w
 })
 
 export const MILESTONES: EventSeed[] = [
-  m('ms-mimora', 'Mimora deploy done', '2026-08-02', 'HARD', 3, 'A live URL, not “almost”.'),
-  m('ms-resume', 'RESUME + GITHUB + PORTFOLIO SHIPPED', '2026-08-15', 'HARD', 5, 'Everything after this date assumes these exist. Applications start leaning on them.'),
-  m('ms-flagship', 'GenAI flagship shipped', '2026-11-01', 'HARD', 16),
-  m('ms-plan-end', 'Plan ends — write the retrospective', '2026-11-15', 'HARD', 18),
-  m('ph-1', 'Phase 1 begins · From scratch', '2026-07-13', 'INFO', 1),
-  m('ph-2', 'Phase 2 begins · Get presentable', '2026-07-20', 'INFO', 2),
-  m('ph-3', 'Phase 3 begins · Under the abstractions', '2026-08-10', 'INFO', 5),
-  m('ph-4', 'Phase 4 begins · Design + GenAI', '2026-09-14', 'INFO', 10),
-  m('ph-5', 'Phase 5 begins · Convert', '2026-10-19', 'INFO', 15),
+  m('ms-mimora', 'Mimora deploy done', weekEnd(3), 'HARD', 3, 'A live URL, not “almost”.'),
+  m('ms-resume', 'RESUME + GITHUB + PORTFOLIO SHIPPED', addDaysStr(weekStart(5), 5), 'HARD', 5, 'Everything after this date assumes these exist. Applications start leaning on them.'),
+  m('ms-flagship', 'GenAI flagship shipped', weekEnd(16), 'HARD', 16),
+  m('ms-plan-end', 'Plan ends — write the retrospective', weekEnd(18), 'HARD', 18),
+  m('ph-1', 'Phase 1 begins · From scratch', weekStart(1), 'INFO', 1),
+  m('ph-2', 'Phase 2 begins · Get presentable', weekStart(2), 'INFO', 2),
+  m('ph-3', 'Phase 3 begins · Under the abstractions', weekStart(5), 'INFO', 5),
+  m('ph-4', 'Phase 4 begins · Design + GenAI', weekStart(10), 'INFO', 10),
+  m('ph-5', 'Phase 5 begins · Convert', weekStart(15), 'INFO', 15),
 ]
 
 /* ── Caveats: the judgement that stops the links pushing toward low-value options. VERBATIM. ── */

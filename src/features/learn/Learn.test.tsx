@@ -70,17 +70,89 @@ describe('Learn — works fully offline (no network code involved)', () => {
   })
 
   it('a week with no matching pack says so — no filler recommendation', async () => {
-    setClockSource(() => localDate('2026-10-20', '10:00')) // week 15: revision · mocks
+    setClockSource(() => localDate('2027-01-12', '10:00')) // week 15: revision · mocks
     render(learn())
     expect(await screen.findByText(/No pack matches this week/)).toBeInTheDocument()
     expect(screen.queryByTestId('todays-pack')).toBeNull()
   })
 
-  it('the library is a two-column grid of all 12 seeded packs', async () => {
+  it('the library is a two-column grid; by default it shows the 12 core packs, not the exam-prep collection', async () => {
     render(learn())
     const lib = await screen.findByTestId('library')
     expect(lib.className).toMatch(/grid-cols-2/)
     expect(within(lib).getAllByRole('link')).toHaveLength(12)
+  })
+})
+
+describe('Learn — Capgemini exam prep', () => {
+  const onDay = (n: number) => setClockSource(() => localDate(addDays('2026-10-07', n - 1), '10:00'))
+
+  it('on prep day 4 the card lists that day’s lesson and drills, with the day count and the exam countdown', async () => {
+    onDay(4)
+    render(learn())
+    const card = await screen.findByTestId('capg-card')
+    expect(card).toHaveTextContent('Day 4 of 60')
+    expect(card).toHaveTextContent('58 days to the exam (Mon 7 Dec)')
+    expect(within(within(card).getByRole('list', { name: 'Learn for today' })).getByRole('link', { name: /Recursion & the call stack/ })).toBeInTheDocument()
+    expect(within(within(card).getByRole('list', { name: 'Drills for today' })).getAllByRole('link').length).toBeGreaterThan(0)
+  })
+
+  it('says plainly that the seeded exam date is a placeholder, until the user edits it', async () => {
+    onDay(4)
+    const { unmount } = render(learn())
+    expect(await screen.findByText(/placeholder — confirm it from your invitation/)).toBeInTheDocument()
+    unmount()
+    const exam = (await db.events.toArray()).find((e) => e.title.startsWith('Capgemini exam'))!
+    await db.events.put({ ...exam, userModified: true, date: '2026-12-14' })
+    render(learn())
+    await waitFor(() => expect(screen.getByTestId('capg-card')).toHaveTextContent('65 days to the exam (Mon 14 Dec)'))
+    expect(screen.queryByText(/placeholder — confirm it/)).toBeNull()
+  })
+
+  it('exam-prep packs are never chosen as the generic “today’s pack”', async () => {
+    onDay(4)
+    render(learn())
+    const todays = await screen.findByTestId('todays-pack')
+    expect(todays).not.toHaveTextContent(/Recursion & the call stack|Drill ·/)
+  })
+
+  it('the library filters by scope and by kind', async () => {
+    const u = userEvent.setup()
+    onDay(4)
+    render(learn())
+    const lib = await screen.findByTestId('library')
+    const scope = screen.getByRole('group', { name: 'Library scope' })
+    await u.click(within(scope).getByRole('button', { name: 'Capgemini' }))
+    await waitFor(() => expect(within(lib).getAllByRole('link').length).toBeGreaterThan(100))
+    await u.click(within(screen.getByRole('group', { name: 'Capgemini pack kind' })).getByRole('button', { name: 'Debugging' }))
+    await waitFor(() => expect(within(lib).getAllByRole('link')).toHaveLength(22))
+    expect(within(lib).getAllByRole('link')[0]).toHaveTextContent(/Debugging/)
+    await u.click(within(scope).getByRole('button', { name: 'All' }))
+    await waitFor(() => expect(within(lib).getAllByRole('link').length).toBeGreaterThan(200))
+  })
+
+  it('“Browse all Capgemini packs” switches the library to the collection', async () => {
+    const u = userEvent.setup()
+    onDay(4)
+    render(learn())
+    await u.click(await screen.findByRole('button', { name: 'Browse all Capgemini packs' }))
+    expect(within(screen.getByRole('group', { name: 'Library scope' })).getByRole('button', { name: 'Capgemini', pressed: true })).toBeInTheDocument()
+  })
+
+  it('after the 60 days the card shows no scheduled work, only an upcoming exam countdown', async () => {
+    onDay(62) // 7 Dec, exam day
+    render(learn())
+    const card = await screen.findByTestId('capg-card')
+    expect(card).toHaveTextContent('window has ended')
+    expect(card).toHaveTextContent('the exam is today')
+    expect(within(card).queryAllByRole('link')).toHaveLength(0)
+  })
+
+  it('once the exam has passed the card disappears', async () => {
+    onDay(70)
+    render(learn())
+    await screen.findByTestId('quote')
+    expect(screen.queryByTestId('capg-card')).toBeNull()
   })
 })
 

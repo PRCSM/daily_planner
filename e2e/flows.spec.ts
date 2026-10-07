@@ -4,10 +4,10 @@ import { readFileSync } from 'node:fs'
 
 /**
  * The five flows that matter, against the PRODUCTION build (service worker, precache, real IndexedDB).
- * The clock is frozen inside the plan (Tue 4 Aug 2026, week 4) so tests never depend on the day they run, and the
+ * The clock is frozen inside the plan (Tue 27 Oct 2026, week 4) so tests never depend on the day they run, and the
  * timezone is IST so a UTC-derived date bug would show up here.
  */
-const NOW = new Date('2026-08-04T10:00:00+05:30')
+const NOW = new Date('2026-10-27T10:00:00+05:30')
 
 test.use({ timezoneId: 'Asia/Kolkata', locale: 'en-IN', serviceWorkers: 'allow' })
 
@@ -53,9 +53,9 @@ test('1 · log a day in under 30 seconds: topic + Enter, twice, then the day sho
   await expect(page.getByTestId('open-log')).toContainText('2h 30m logged')
   await expect(page.getByTestId('week-strip').getByLabel('logged')).toHaveCount(1)
 
-  // the log is for LOCAL 4 Aug (IST), not the UTC date
+  // the log is for LOCAL 27 Oct (IST), not the UTC date
   await page.getByTestId('open-log').click()
-  await expect(page.getByTestId('log-date')).toContainText('Tue 4 Aug')
+  await expect(page.getByTestId('log-date')).toContainText('Tue 27 Oct')
 })
 
 test('2 · tick a block: it persists across a reload, and only that day is marked', async ({ page }) => {
@@ -66,7 +66,7 @@ test('2 · tick a block: it persists across a reload, and only that day is marke
   await expect(deepA).toHaveAttribute('aria-checked', 'true')
   await page.reload()
   await expect(page.getByRole('checkbox', { name: /Done: Deep A/ })).toHaveAttribute('aria-checked', 'true')
-  await page.getByRole('button', { name: 'Wednesday 5 August' }).click()
+  await page.getByRole('button', { name: 'Wednesday 28 October' }).click()
   await expect(page.getByRole('checkbox', { name: /Done: Deep A/ })).toHaveAttribute('aria-checked', 'false')
 })
 
@@ -158,7 +158,7 @@ test('5 · export → erase → import restores everything', async ({ page }) =>
   const warning = page.getByTestId('export-warning')
   await expect(warning).toContainText('full history')
   const [download] = await Promise.all([page.waitForEvent('download'), warning.getByRole('button', { name: 'Save the file' }).click()])
-  expect(download.suggestedFilename()).toBe('cadence-backup-2026-08-04.json')
+  expect(download.suggestedFilename()).toBe('cadence-backup-2026-10-27.json')
   const path = await download.path()
   const file = JSON.parse(readFileSync(path, 'utf8'))
   expect(file).toMatchObject({ app: 'cadence', formatVersion: 1 })
@@ -183,6 +183,32 @@ test('5 · export → erase → import restores everything', async ({ page }) =>
   await page.getByTestId('open-log').click()
   await expect(page.getByTestId('logged-block')).toContainText('round-trip topic')
   await expect(page.getByLabel('Problems logged today')).toContainText('Two Sum')
+})
+
+test('6 · Capgemini prep: today’s day, the exam countdown and the day’s packs are in Learn — and still there with no network', async ({ page, context }) => {
+  await boot(page)
+  await swReady(page)
+  await page.getByRole('link', { name: 'Learn' }).click()
+  const card = page.getByTestId('capg-card')
+  await expect(card).toContainText('Day 21 of 60') // Tue 27 Oct 2026
+  await expect(card).toContainText('41 days to the exam (Mon 7 Dec)')
+  await expect(card).toContainText('placeholder')
+  const firstLesson = card.getByRole('list', { name: 'Learn for today' }).getByRole('link').first()
+  await expect(firstLesson).toBeVisible()
+
+  await context.setOffline(true)
+  await page.reload()
+  await expect(page.getByTestId('capg-card')).toContainText('Day 21 of 60')
+  await page.getByTestId('capg-card').getByRole('list', { name: 'Learn for today' }).getByRole('link').first().click()
+  await expect(page.getByTestId('reader-card').first()).toBeVisible()
+  await expect(page.getByText(/Card 1 of \d+/)).toBeVisible()
+  await context.setOffline(false)
+
+  // the day's study block is on the calendar for the same date, next to the base plan's blocks
+  await page.goto('/calendar')
+  await page.getByRole('button', { name: /^Tuesday 27 October/ }).click()
+  await expect(page.getByText(/Capgemini · day 21\/60/)).toBeVisible()
+  await expect(page.getByText('Deep A — DSA').first()).toBeVisible()
 })
 
 test.describe('accessibility (axe) — no serious or critical violations on any screen', () => {

@@ -44,7 +44,7 @@ describe('Opportunities', () => {
     expect(within(sih).getByText(/six-person team/)).toBeInTheDocument()
   })
 
-  it('past windows are CLOSED — dimmed and sunk to the bottom of their month, never removed', async () => {
+  it('past windows are CLOSED — muted and sunk to the bottom of their month, never removed', async () => {
     setClockSource(() => localDate('2026-07-25', '10:00')) // Flipkart GRiD (15 Jul → 20 Aug) still open; nothing closed yet in July…
     const { unmount } = render(<OpportunitiesScreen />)
     await screen.findByText('Amazon — SDE new-grad applications')
@@ -59,7 +59,9 @@ describe('Opportunities', () => {
     const octRows = within(oct).getAllByTestId('opportunity').map((r) => r.getAttribute('data-closed'))
     expect(octRows).not.toContain('false') // all closed by now…
     const jul = screen.getByRole('region', { name: 'July 2026' })
-    expect(within(jul).getAllByTestId('opportunity')[0]!.className).toMatch(/opacity-50/)
+    const first = within(jul).getAllByTestId('opportunity')[0]!
+    expect(first.className).not.toMatch(/opacity/) // faded text fails contrast; a closed row is quieter through colour instead
+    expect(first.querySelector('.t-body-strong')!.className).toMatch(/text-ink-2/)
   })
 
   it('the "typical dates" note appears ONCE at the top, not repeated on every card', async () => {

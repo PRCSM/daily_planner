@@ -106,6 +106,43 @@ tests (48 files, 96% statement coverage overall, per-layer thresholds enforced) 
   dashboard (Edge Functions → Secrets). Until then the function answers `NO_KEY` and Learn → chat says AI is not configured.
 - **Vercel** project `cadence` linked to this repo; `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` set (public values by design).
 
+## Re-based plan + Capgemini exam prep (2026-10-07)
+
+- **Plan re-based to start from today.** Every plan date moved exactly 12 weeks later: week 1 = Mon 5 Oct 2026 … week 18 = Sun 7 Feb 2027; the
+  daily blocks start Wed 7 Oct (week 1 is a short week, and the pro-rata verdict means a short week is never red). Milestone and deliverable
+  dates are now *derived* from week numbers (`weekStart`/`weekEnd`), not typed as literals. `SEED_VERSION` 2 → 3: a re-seed refreshes untouched
+  rows in place (deterministic ids) and never overwrites an edited one. Dated *opportunity windows* are real-world calendar facts and did not move.
+- **Capgemini prep is a second track beside the base plan, not a replacement.** 60 one-off day blocks (Day 1 = Wed 7 Oct … Day 60 = Sat 5 Dec) in
+  their own evening/weekend slot, so the base rhythm (06:30 Deep A, 19:00 Deep B, 21:00 Block C, weekend build) is untouched. Each day block's
+  notes list that day's lessons, drills and practice; the same day's packs are tagged `cg-d<N>` and surface in **Learn → Capgemini prep**.
+- **Conversion, not a port.** `scripts/extract-capgemini.mjs` evaluates the page's data arrays in an empty `vm` context, rewrites lesson HTML to the
+  app's constrained markdown (tables → labelled bullets, callout boxes → WARNING/EXAMPLE/CONCEPT cards, code kept as fenced blocks), and asserts
+  every rewrite. Output is deterministic and validated by the same `validatePackObject` as AI-generated packs. 207 packs / 1,306 cards / 60 days.
+- **Loaded lazily** (`import('./content.json?raw')` → its own ~132 kB-gzip chunk, fetched only when the seed runs). If that fetch fails the seed
+  **defers entirely** (writes nothing, keeps the old version, retries next launch) so a partial seed can never delete the already-seeded packs.
+- **Exam-pack separation**: Capgemini packs carry the tag `capgemini` and are excluded from the generic "today's pack" picker; the Library defaults
+  to *Core plan* with *Capgemini* (+ kind chips) and *All* scopes.
+- **Fixed on the way (found by e2e once the clock moved to a date with closed opportunities):** `text-on-accent` never generated CSS (no
+  `--color-on-accent` in `@theme`), so the add button, accent pills and the calendar's *today* marker used inherited light text on coral (2.55:1);
+  closed opportunities were dimmed with `opacity-50`, which fails contrast (1.6–4.4:1) — they are now muted by colour and the outline pill.
+
+### Deviations / honest limits of the Capgemini import
+
+1. **The exam date is a placeholder.** 7 Dec 2026 came from the source page's own default (60 days from its start), not from an invitation. It is a
+   HARD milestone titled "confirm this date"; the Learn card says so until the event is edited. Editing it does not re-time the 60 day blocks.
+2. **Interactive mechanics were not ported:** timed section tests and full mocks, per-question scoring and topic accuracy, the cognitive games
+   (grid / motion / switch / digit / series / deduction), speech recognition and dictation scoring. Drills are *reveal-the-answer* cards (self-scored);
+   plan days that name a game or a mock say so ("not in this app" / "as one timed sitting") instead of pretending. The original page still has them.
+3. **Lessons are mechanically converted** (headings → cards, plus a derived "to remember" recap). Spot-checked and asserted structurally, not
+   re-written by hand — read a few on your device and say if any card reads badly.
+4. **Source provenance**: the 2027 pattern is candidate-reported (Capgemini has not published it). The pack "Capgemini 2027 · the exam at a glance"
+   keeps that caveat verbatim.
+5. **Load**: the prep block is ~1.5 h on weekdays, 2 h on weekends, on top of ~5 h of base-plan blocks. The source's own daily menu is longer than that;
+   anything that does not fit is marked optional in practice, not silently dropped. Move the blocks in Calendar if your college hours differ.
+6. **Application timing tension (not changed):** the base plan's application ramp (weeks 3–5 onwards) was written for a mid-July start, while several
+   real hiring windows (Google, Adobe, Atlassian, campus season) open in early/mid October. Starting from scratch today means those windows overlap
+   your first weeks. The weekly application targets are untouched — edit them in Plan if you want them earlier.
+
 ## Open issues / needs the owner
 
 - **Not created from here** (they need your accounts): the Supabase project, the Edge Function secret, and the Vercel/Netlify project. The

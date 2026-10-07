@@ -16,7 +16,22 @@ npm run ci           # typecheck + lint + guards + unit/integration tests + buil
 npm run e2e          # Playwright (production build, service worker, offline reload) — see below
 ```
 
-The app seeds itself on first launch (18 weekly targets, ~45 opportunities, 12 portals, 12 lesson packs, 31 quotes).
+The app seeds itself on first launch (18 weekly targets, ~45 opportunities, 12 portals, 12 lesson packs, 31 quotes, plus the
+Capgemini exam-prep collection below). The 18-week plan starts **Mon 5 Oct 2026** (first scheduled day Wed 7 Oct) and ends Sun 7 Feb 2027.
+
+## Capgemini exam prep
+
+A 60-day exam-prep track runs alongside the base plan (it does not replace it): one evening block per day (17:30–19:00 weekdays,
+15:00–17:00 weekends) next to the existing Deep A / Deep B / Block C rhythm. **Learn → Capgemini prep** shows today's day, the days to the exam
+and that day's packs. The content — 62 lessons, 64 drill packs (423 exam-style MCQs, answer revealed on tap), 22 coding problems, 22 debugging
+challenges, interview flashcards, prompt-engineering and AI-assisted-coding walk-throughs, English drills — was converted from a standalone prep
+page by `scripts/extract-capgemini.mjs` into `src/seed/capgemini/content.json` (loaded lazily, only when the seed runs).
+
+```bash
+node scripts/extract-capgemini.mjs path/to/capgemini-2027-prep.html   # deterministic; commit the diff
+```
+
+The exam date in Calendar (**7 Dec 2026**) is a **placeholder** — replace it with the date on your invitation.
 No account, no network. Everything below is **optional**.
 
 ## Cloud sync (optional)

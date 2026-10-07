@@ -73,7 +73,7 @@ describe('Settings', () => {
     await u.click(await screen.findByRole('button', { name: /Row counts, sync and storage/ }))
     const table = await screen.findByRole('table', { name: 'Row counts' })
     await waitFor(() => expect(within(table).getByText('logBlocks')).toBeInTheDocument())
-    expect(screen.getByText(/\/ v1 \/ v2/)).toBeInTheDocument() // schema v1, seed v2
+    expect(screen.getByText(/\/ v1 \/ v3/)).toBeInTheDocument() // schema v1, seed v3
   })
 })
 
