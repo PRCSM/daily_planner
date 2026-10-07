@@ -11,7 +11,7 @@ export type AiFailure = (typeof AI_FAILURES)[number]
 export type AiResult<T> = { ok: true; data: T } | { ok: false; reason: AiFailure; detail?: string }
 
 export const AI_MESSAGES: Record<AiFailure, string> = {
-  NO_KEY: 'AI isn’t set up yet: the server has no Groq key (or cloud sync isn’t configured). Add it as an Edge Function secret — see Settings.',
+  NO_KEY: 'AI isn’t set up yet: there is no Groq key, or Groq rejected it (revoked or mistyped). See Settings.',
   OFFLINE: 'You’re offline. Chat and pack generation need a connection; everything else works without one.',
   RATE_LIMIT: 'Too many requests right now (rate limit). Wait a minute and try again.',
   AUTH: 'Sign in first (Settings → Sync): AI requests are tied to your account so the key stays on the server.',

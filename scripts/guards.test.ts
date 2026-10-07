@@ -78,6 +78,15 @@ describe('guards catch PLANTED violations (a guard you have not seen fail is not
     expect(rules(scanSource('src/lib/x.test.ts', `const k = "${key}"`))).toContain('SECRETS')
     expect(rules(scanSource('src/lib/x.ts', 'const k = import.meta.env.VITE_GROQ_KEY'))).toContain('SECRETS')
   })
+  it('allows exactly one build-time key variable, and only the AI client may read it', () => {
+    const read = 'const k = import.meta.env.VITE_GROQ_API_KEY'
+    expect(scanSource('src/lib/ai/client.ts', read)).toEqual([])
+    expect(scanSource('src/lib/ai/direct.test.ts', read)).toEqual([]) // tests may name it
+    expect(rules(scanSource('src/features/learn/ChatScreen.tsx', read))).toContain('SECRETS') // …but no other module may read it
+    expect(rules(scanSource('src/lib/other.ts', read))).toContain('SECRETS')
+    expect(rules(scanSource('src/lib/ai/client.ts', 'const k = import.meta.env.VITE_GROQ_SECRET'))).toContain('SECRETS') // any other name
+    expect(rules(scanSource('src/lib/ai/client.ts', 'const k = "gsk_' + 'b'.repeat(40) + '"'))).toContain('SECRETS') // and a literal key, even there
+  })
   it('runGuards walks a project tree and fails on a planted file', () => {
     const root = project({
       'src/lib/ok.ts': 'export const a = 1',

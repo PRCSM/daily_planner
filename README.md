@@ -45,7 +45,11 @@ Local-first: every write goes to IndexedDB immediately; a background worker mirr
 
 ## AI (optional, Learn tab only)
 
-The Groq key is **never** in the app. It lives as a server-side secret in a Supabase Edge Function:
+Two modes, one code path (the browser runs the same handler the Edge Function runs):
+
+- **Direct** (personal use): build with `VITE_GROQ_API_KEY` set (host env var or `.env.local` — never in source or git). The site calls Groq itself; no
+  sign-in or Supabase needed. The key is compiled into the site's JavaScript, so anyone who reads the bundle can use it: use a **free, rotatable** key only.
+- **Cloud** (default when that variable is unset): the key is **never** in the app. It lives as a server-side secret in a Supabase Edge Function:
 
 ```bash
 supabase secrets set GROQ_API_KEY=...         # the only place the key exists

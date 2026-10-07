@@ -6,7 +6,9 @@
  *                the Supabase SDK is imported only by src/lib/supabase.ts.
  *  2. CLOCK      only src/lib/clock.ts reads the clock (no `new Date()`, `Date.now`, `dayjs()`,
  *                `toISOString().slice`), because a UTC-derived "local date" is wrong 5.5h/day in IST.
- *  3. SECRETS    no Groq-key-shaped strings or VITE_GROQ* env anywhere in the repo sources.
+ *  3. SECRETS    no Groq-key-shaped strings anywhere in the repo (comments and tests included). The ONE allowed
+ *                build-time variable is VITE_GROQ_API_KEY (the owner's opt-in "direct AI" mode), and only
+ *                src/lib/ai/client.ts may read it from source; any other VITE_GROQ* name is rejected.
  *
  * Comments are stripped before scanning. A guard you have not seen fail is not a guard:
  * scripts/guards.test.ts plants violations and asserts each one is caught.
@@ -78,7 +80,7 @@ const CLOCK_TOKENS = [
 ]
 const SECRET_TOKENS = [
   [/gsk_[A-Za-z0-9]{16,}/, 'Groq-key-shaped string'],
-  [/\bVITE_GROQ/, 'VITE_GROQ* env (keys never ship to the client)'],
+  [/\bVITE_GROQ(?!_API_KEY\b)/, 'VITE_GROQ* env other than VITE_GROQ_API_KEY'],
   [/\bsk-[A-Za-z0-9]{24,}/, 'sk- key-shaped string'],
 ]
 
@@ -100,6 +102,12 @@ export function scanSource(relPath, text) {
     if (!file.startsWith('src/lib/ai/') && !file.startsWith('src/seed/')) check('NETWORK', NETWORK_TOKENS)
     if (file !== 'src/lib/supabase.ts') check('NETWORK', [[SDK, 'Supabase SDK import outside src/lib/supabase.ts']])
     if (file !== 'src/lib/clock.ts') check('CLOCK', CLOCK_TOKENS)
+  }
+  // The one permitted key variable may be READ only by the AI client (tests and docs may name it).
+  if (/^src\//.test(file) && file !== 'src/lib/ai/client.ts' && !/\.test\.[tj]sx?$/.test(file)) {
+    text.split('\n').forEach((line, idx) => {
+      if (/\bVITE_GROQ_API_KEY\b/.test(line)) found.push({ rule: 'SECRETS', file, line: idx + 1, hit: 'VITE_GROQ_API_KEY read outside src/lib/ai/client.ts' })
+    })
   }
   // Secrets are scanned in tests too (fixtures must not contain real-looking keys),
   // and in the raw text so a commented-out key is still caught.

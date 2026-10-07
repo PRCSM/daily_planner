@@ -72,7 +72,7 @@ function mkDeps(over: Partial<AiDeps> = {}): AiDeps {
     anonKey: 'anon-public-key',
     getToken: async () => 'user-session-token',
     isOnline: () => true,
-    fetchImpl: (async () => new Response(JSON.stringify({ ok: true, data: { reply: 'hi' } }), { status: 200 })) as unknown as typeof fetch,
+    fetchImpl: (async () => new Response(JSON.stringify({ ok: true, data: { content: 'hi' } }), { status: 200 })) as unknown as typeof fetch,
     timeoutMs: 60,
     ...over,
   }
@@ -130,20 +130,20 @@ describe('every AI function returns a discriminated result — never throws', ()
   })
   it('MALFORMED for a 200 that isn’t our shape, an empty reply, or an empty question', async () => {
     expect(await askChat({ question: 'x' }, respond(200, { hello: 1 }))).toMatchObject({ reason: 'MALFORMED' })
-    expect(await askChat({ question: 'x' }, respond(200, { ok: true, data: { reply: '  ' } }))).toMatchObject({ reason: 'MALFORMED' })
+    expect(await askChat({ question: 'x' }, respond(200, { ok: true, data: { content: '  ' } }))).toMatchObject({ reason: 'MALFORMED' })
     expect(await askChat({ question: ' ' }, mkDeps())).toMatchObject({ reason: 'MALFORMED' })
     expect(await generatePack({ topic: '  ', track: 'DSA', cardCount: 8 }, mkDeps())).toMatchObject({ reason: 'MALFORMED' })
   })
   it('sends the session token + anon key as headers and JSON as the body', async () => {
     const seen: RequestInit[] = []
-    await askChat({ question: 'x' }, mkDeps({ fetchImpl: (async (_u: string, i: RequestInit) => (seen.push(i), new Response(JSON.stringify({ ok: true, data: { reply: 'r' } })))) as never }))
+    await askChat({ question: 'x' }, mkDeps({ fetchImpl: (async (_u: string, i: RequestInit) => (seen.push(i), new Response(JSON.stringify({ ok: true, data: { content: 'r' } })))) as never }))
     const h = seen[0]!.headers as Record<string, string>
     expect(h.authorization).toBe('Bearer user-session-token')
     expect(h.apikey).toBe('anon-public-key')
     expect(seen[0]!.method).toBe('POST')
   })
   it('caps an absurdly long reply', async () => {
-    const r = await askChat({ question: 'x' }, respond(200, { ok: true, data: { reply: 'a'.repeat(50000) } }))
+    const r = await askChat({ question: 'x' }, respond(200, { ok: true, data: { content: 'a'.repeat(50000) } }))
     expect(r.ok && r.data.reply.length).toBe(8000)
   })
 })

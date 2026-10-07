@@ -57,7 +57,16 @@ describe('Settings', () => {
     const u = userEvent.setup()
     render(ui())
     await u.click(await screen.findByRole('button', { name: 'Check AI' }))
-    expect(await screen.findByTestId('ai-check')).toHaveTextContent(/server has no Groq key/)
+    expect(await screen.findByTestId('ai-check')).toHaveTextContent(/no Groq key, or Groq rejected it/)
+  })
+
+  it('in a build that was given a Groq key, says so plainly — and that the key is readable in the site’s code', async () => {
+    vi.stubEnv('VITE_GROQ_API_KEY', 'a-build-time-key')
+    render(ui())
+    expect(await screen.findByTestId('ai-mode-direct')).toHaveTextContent(/talks to Groq directly/)
+    expect(screen.getByTestId('ai-mode-direct')).toHaveTextContent(/anyone who reads the page’s code could use it/)
+    expect(screen.queryByText(/supabase secrets set/)).toBeNull()
+    vi.unstubAllEnvs()
   })
 
   it('states that the Groq key lives only in the Edge Function', async () => {

@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { SCHEMA_VERSION, buildExport, commitImport, eraseLocalData, exportFilename, findKeyShapedStrings, previewImport, tableCounts, type ImportPreview } from '@/data/backup'
 import { getSyncStatus, subscribeSyncStatus, syncNow } from '@/data/sync'
 import { SEED_VERSION } from '@/data/seed'
-import { checkAi, AI_MESSAGES, type AiFailure, type AiHealth } from '@/lib/ai'
+import { aiMode, checkAi, AI_MESSAGES, type AiFailure, type AiHealth } from '@/lib/ai'
 import { signInWithEmail, signOut, wipeCloud } from '@/lib/supabase'
 import { readClock } from '@/lib/clock'
 import { Button, Card, CardList, Chip, Note, Pill, Screen, ScreenTitle, SectionLabel } from '@/ui/primitives'
@@ -86,10 +86,18 @@ function AiSection() {
     <>
       <SectionLabel>AI (Learn tab only)</SectionLabel>
       <Card>
-        <p className="t-label text-ink-2">
-          The Groq key lives only as a server-side secret in a Supabase Edge Function — never in this app, its storage, or your backups:
-        </p>
-        <pre className="t-meta mt-2 overflow-x-auto rounded-[10px] bg-bg p-3 font-mono text-ink-2">supabase secrets set GROQ_API_KEY=…{'\n'}supabase functions deploy ai</pre>
+        {aiMode() === 'direct' ? (
+          <p className="t-label text-ink-2" data-testid="ai-mode-direct">
+            This build talks to Groq directly, with a key supplied when the site was built. That key is part of the site’s JavaScript, so anyone who reads the page’s code could use it — fine for a free key you can rotate, never for a billed one. It is not stored on this device, in your backups, or in sync. If it ever leaks, revoke it at console.groq.com and rebuild.
+          </p>
+        ) : (
+          <>
+            <p className="t-label text-ink-2">
+              The Groq key lives only as a server-side secret in a Supabase Edge Function — never in this app, its storage, or your backups:
+            </p>
+            <pre className="t-meta mt-2 overflow-x-auto rounded-[10px] bg-bg p-3 font-mono text-ink-2">supabase secrets set GROQ_API_KEY=…{'\n'}supabase functions deploy ai</pre>
+          </>
+        )}
         <div className="mt-3 flex items-center gap-3">
           <Button variant="secondary" disabled={!online || state.busy} onClick={async () => {
             setState({ busy: true })

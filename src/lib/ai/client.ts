@@ -1,15 +1,26 @@
 import { validatePackJson, type ValidPack } from '../packSchema'
+import { run } from '../../../supabase/functions/ai/handler.ts'
+import { parseRequest } from '../../../supabase/functions/ai/validate.ts'
+import { readClock } from '../clock'
 import { anonApiKey, functionsUrl, getAccessToken } from '../supabase'
 import { buildChatRequest, buildPackRequest } from './payloads'
 import type { AiFailure, AiHealth, AiResult, ChatReply, ChatRequest, PackRequest } from './types'
 
 /**
- * THE ONLY MODULE ALLOWED TO CALL fetch. The browser never sees the Groq key: it calls a Supabase Edge
- * Function with the user's session token, and the function holds the key as a server-side secret.
+ * THE ONLY MODULE ALLOWED TO CALL fetch. Two modes, one code path:
+ *
+ *  - CLOUD (default): the browser calls a Supabase Edge Function with the user's session token and the function holds
+ *    the Groq key as a server-side secret — the key never reaches the browser.
+ *  - DIRECT (opt-in): when the build was given VITE_GROQ_API_KEY, the browser runs the SAME handler the Edge Function
+ *    runs (validation, prompts, model fallback, rate limit) and calls Groq itself. No sign-in, no Supabase. The cost:
+ *    the key is inside the site's JavaScript, so anyone who reads the bundle can use it. Acceptable only for a free,
+ *    rotatable key on a personal app. The key is read from the build environment, never from source, storage or sync.
  *
  * Nothing here throws. Nothing here logs keys, headers or request objects.
  */
 export interface AiDeps {
+  /** Build-time Groq key for DIRECT mode; null in CLOUD mode. */
+  directKey?: string | null
   endpoint: string | null
   anonKey: string | null
   getToken: () => Promise<string | null>
@@ -18,7 +29,15 @@ export interface AiDeps {
   timeoutMs: number
 }
 
+/** The build-time key, or null. Whitespace-only counts as unset. */
+export const directKeyFromEnv = (): string | null => {
+  const k = (import.meta.env.VITE_GROQ_API_KEY as string | undefined)?.trim()
+  return k ? k : null
+}
+export const aiMode = (): 'direct' | 'cloud' => (directKeyFromEnv() ? 'direct' : 'cloud')
+
 const defaults = (timeoutMs: number): AiDeps => ({
+  directKey: directKeyFromEnv(),
   endpoint: functionsUrl('ai'),
   anonKey: anonApiKey(),
   getToken: getAccessToken,
@@ -31,22 +50,40 @@ const fail = <T>(reason: AiFailure, detail?: string): AiResult<T> => ({ ok: fals
 
 const REASONS = new Set<string>(['NO_KEY', 'OFFLINE', 'RATE_LIMIT', 'AUTH', 'TIMEOUT', 'SERVER', 'MALFORMED', 'MODEL_RETIRED'])
 
+/** DIRECT mode: run the Edge Function's own handler in the browser. Returns the same Response shape the function would. */
+async function viaHandler(body: Record<string, unknown>, deps: AiDeps, key: string): Promise<Response | AiResult<never>> {
+  const parsed = parseRequest(body) // the same strict, unknown-key-rejecting validator the server uses
+  if (!parsed.ok) return fail('MALFORMED', parsed.why)
+  return run({ env: { GROQ_API_KEY: key }, fetchImpl: deps.fetchImpl, now: () => Date.parse(readClock().iso), timeoutMs: deps.timeoutMs }, 'local', parsed.req)
+}
+
 /** The wire call. Returns the function's `data` payload, or a typed failure. */
 async function call(body: { kind: 'pack' | 'chat' | 'health' } & Record<string, unknown>, deps: AiDeps): Promise<AiResult<Record<string, unknown>>> {
-  if (!deps.endpoint || !deps.anonKey) return fail('NO_KEY', 'cloud not configured')
-  if (!deps.isOnline()) return fail('OFFLINE')
-  const token = await deps.getToken()
+  if (deps.directKey) {
+    if (!deps.isOnline()) return fail('OFFLINE')
+  } else {
+    if (!deps.endpoint || !deps.anonKey) return fail('NO_KEY', 'cloud not configured')
+    if (!deps.isOnline()) return fail('OFFLINE')
+  }
+  const token = deps.directKey ? 'direct' : await deps.getToken()
   if (!token) return fail('AUTH')
 
   const ctl = new AbortController()
   const timer = setTimeout(() => ctl.abort(), deps.timeoutMs)
   try {
-    const res = await deps.fetchImpl(deps.endpoint, {
-      method: 'POST',
-      signal: ctl.signal,
-      headers: { 'content-type': 'application/json', authorization: `Bearer ${token}`, apikey: deps.anonKey },
-      body: JSON.stringify(body),
-    })
+    let res: Response
+    if (deps.directKey) {
+      const r = await viaHandler(body, deps, deps.directKey)
+      if (!(r instanceof Response)) return r
+      res = r
+    } else {
+      res = await deps.fetchImpl(deps.endpoint as string, {
+        method: 'POST',
+        signal: ctl.signal,
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${token}`, apikey: deps.anonKey as string },
+        body: JSON.stringify(body),
+      })
+    }
     let json: unknown = null
     try {
       json = await res.json()
@@ -93,7 +130,7 @@ export async function askChat(req: ChatRequest, deps: AiDeps = defaults(30_000))
   if (narrow.history) body.history = narrow.history
   const r = await call(body, deps)
   if (!r.ok) return r
-  const reply = r.data.reply
+  const reply = r.data.content // the Edge Function's field name (also what DIRECT mode returns)
   return typeof reply === 'string' && reply.trim() ? { ok: true, data: { reply: reply.slice(0, 8000) } } : fail('MALFORMED', 'empty reply')
 }
 

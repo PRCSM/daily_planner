@@ -1,6 +1,6 @@
 import { GROQ_BASE, modelsFrom } from './models.ts'
 import { chatMessages, packMessages, type Msg } from './prompts.ts'
-import { MAX_BODY_BYTES, parseRequest } from './validate.ts'
+import { MAX_BODY_BYTES, parseRequest, type AiRequest } from './validate.ts'
 
 /**
  * The AI Edge Function core. Pure of Deno APIs (env, fetch and the clock are injected) so it is unit-tested with
@@ -111,7 +111,8 @@ async function callGroq(deps: Deps, model: string, messages: Msg[], opts: { json
     const content = data?.choices?.[0]?.message?.content
     return typeof content === 'string' && content.trim() ? { ok: true, content } : { ok: false, reason: 'MALFORMED' }
   } catch (e) {
-    if (e instanceof Error && e.name === 'AbortError') return { ok: false, reason: 'TIMEOUT' }
+    // Match on the name, not `instanceof`: a DOMException from another realm (jsdom, an iframe) is not an Error here.
+    if (typeof e === 'object' && e !== null && (e as { name?: unknown }).name === 'AbortError') return { ok: false, reason: 'TIMEOUT' }
     return { ok: false, reason: 'SERVER' }
   } finally {
     clearTimeout(timer)
@@ -162,8 +163,15 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
   }
   const parsed = parseRequest(body)
   if (!parsed.ok) return failure(env, 'MALFORMED', { detail: parsed.why })
-  const r = parsed.req
+  return run(deps, user, parsed.req)
+}
 
+/**
+ * Everything after authentication and parsing: key check, per-user rate limit, dispatch. Exported so the browser can
+ * run the SAME logic in "direct" mode (see src/lib/ai/client.ts) instead of re-implementing validation and fallback.
+ */
+export async function run(deps: Deps, user: string, r: AiRequest): Promise<Response> {
+  const { env } = deps
   if (!env.GROQ_API_KEY) return failure(env, 'NO_KEY')
   if (limited(deps.hits ?? sharedHits, `${user}|${r.kind}`, RATE[r.kind], deps.now())) return failure(env, 'RATE_LIMIT')
 

@@ -52,7 +52,7 @@ const ui = (deps: AiDeps, url = '/learn/chat') => (
 describe('Chat', () => {
   it('sends a question, stores both messages, and renders the answer', async () => {
     const u = userEvent.setup()
-    const { deps, bodies } = mk(() => ok({ reply: 'Because of **path compression**.' }))
+    const { deps, bodies } = mk(() => ok({ content: 'Because of **path compression**.' }))
     render(ui(deps))
     await u.type(screen.getByLabelText('Your question'), 'why is find fast?{Enter}')
     expect(await screen.findByText('path compression')).toBeInTheDocument()
@@ -63,7 +63,7 @@ describe('Chat', () => {
 
   it('model output is TEXT: HTML, scripts and links in a reply are never rendered as elements', async () => {
     const u = userEvent.setup()
-    const { deps } = mk(() => ok({ reply: '<script>window.__pwned=1</script><img src=x onerror="window.__pwned=1"> [click](javascript:alert(1)) **ok**' }))
+    const { deps } = mk(() => ok({ content: '<script>window.__pwned=1</script><img src=x onerror="window.__pwned=1"> [click](javascript:alert(1)) **ok**' }))
     const { container } = render(ui(deps))
     await u.type(screen.getByLabelText('Your question'), 'x{Enter}')
     const list = await screen.findByRole('list', { name: 'Messages' })
@@ -78,7 +78,7 @@ describe('Chat', () => {
   it('from a card: sends ONLY the pack title + that card’s excerpt, and history as role+content', async () => {
     const u = userEvent.setup()
     const pack = (await db.contentPacks.toArray()).find((p) => p.title === 'Closures')!
-    const { deps, bodies } = mk(() => ok({ reply: 'r' }))
+    const { deps, bodies } = mk(() => ok({ content: 'r' }))
     render(ui(deps, `/learn/chat?pack=${pack.id}&card=0`))
     expect(await screen.findByText(/About: Closures · card 1/)).toBeInTheDocument()
     await u.type(screen.getByLabelText('Your question'), 'first{Enter}')
@@ -114,7 +114,7 @@ describe('Chat', () => {
 
   it('offline: a clear banner, input and Send disabled — and nothing is attempted', async () => {
     vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false)
-    const { deps, bodies } = mk(() => ok({ reply: 'x' }))
+    const { deps, bodies } = mk(() => ok({ content: 'x' }))
     render(ui(deps))
     act(() => void window.dispatchEvent(new Event('offline')))
     expect(await screen.findByTestId('offline-banner')).toHaveTextContent(/offline/i)
@@ -125,7 +125,7 @@ describe('Chat', () => {
 
   it('history lists chats and can reopen or delete them', async () => {
     const u = userEvent.setup()
-    const { deps } = mk(() => ok({ reply: 'a' }))
+    const { deps } = mk(() => ok({ content: 'a' }))
     render(ui(deps))
     await u.type(screen.getByLabelText('Your question'), 'remember me{Enter}')
     await screen.findByText('a')

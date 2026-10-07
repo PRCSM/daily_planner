@@ -143,6 +143,20 @@ tests (48 files, 96% statement coverage overall, per-layer thresholds enforced) 
    real hiring windows (Google, Adobe, Atlassian, campus season) open in early/mid October. Starting from scratch today means those windows overlap
    your first weeks. The weekly application targets are untouched — edit them in Plan if you want them earlier.
 
+## Direct AI mode (2026-10-07) — a deliberate, owner-requested deviation from "the key never reaches the browser"
+
+- **Decision (the owner's, for a personal app and a free key):** the site may call Groq straight from the browser. `VITE_GROQ_API_KEY`, set as a
+  *sensitive* Vercel build variable (production + preview), switches `lib/ai` to **direct mode**; with it unset the app behaves exactly as before (cloud mode:
+  Supabase Edge Function, key server-side only). The key is **not in source or git** — only in the host's build environment and, necessarily, in the shipped
+  JavaScript, so **anyone who reads the bundle can use it**. Treat it as disposable: rotate it at console.groq.com if it ever leaks or is abused.
+- **One code path, not two:** direct mode runs the Edge Function's own `run()` (strict unknown-key-rejecting validation, prompts, model fallback on retirement
+  only, per-user rate limit) in the browser via an injected `fetch`; `lib/ai` is still the only module that calls `fetch`. No sign-in and no Supabase needed.
+- **Guards kept:** the secrets guard and export check still hold (the key is in no source file, storage, backup or sync payload — tested by "the key never
+  appears in anything returned to the app"). CSP `connect-src` now also allows `https://api.groq.com`. Settings states which mode is active, and the cost.
+- **A real bug found by the new integration-style tests:** the Edge Function answers chat with `data.content`, but the chat client read `data.reply` — chat
+  through the cloud function could never have worked (every earlier test faked the server with `reply`). Fixed on the client; the fakes now match the real shape.
+- The deployed Edge Function was not redeployed: the repo copy only gained an exported `run()` split and a realm-safe `AbortError` check (no behaviour change).
+
 ## Open issues / needs the owner
 
 - **Not created from here** (they need your accounts): the Supabase project, the Edge Function secret, and the Vercel/Netlify project. The
